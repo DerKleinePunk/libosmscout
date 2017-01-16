@@ -19,5 +19,5 @@ set CMAKE_INCLUDE_PATH=%BUILDDIR%\libiconv\include;%BUILDDIR%\libxml2\include;%B
 set CMAKE_LIBRARY_PATH=%BUILDDIR%\libxml2\lib;%BUILDDIR%\protobuf\lib;%BUILDDIR%\zlib\lib 
 SET CMAKE_PROGRAM_PATH=%BUILDDIR%\protobuf\bin
 
-cmake -G "Visual Studio 14 2015" ..
+cmake -G "Visual Studio 14 2015" -DCMAKE_SYSTEM_VERSION=10.0.##### ..
 cmake --build .
