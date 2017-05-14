@@ -14,11 +14,14 @@ cd %basedir%
 
 IF NOT EXIST "zlib.tar.gz" (
    echo Downloading ZLIB source
-   wget -o build_cmd.log -O zlib.tar.gz http://www.zlib.net/zlib-1.2.8.tar.gz
+   wget -o build_cmd.log -O zlib.tar.gz http://www.zlib.net/zlib-1.2.11.tar.gz
    IF %ERRORLEVEL% NEQ 0 (
 	  echo Error Downloading ZLIB 
 	  exit /b %ERRORLEVEL%
    )
+)
+
+IF NOT EXIST "zlib" (
    7z x zlib.tar.gz -so | 7z x -aoa -si -ttar -o"zlib"
    IF %ERRORLEVEL% NEQ 0 (
 	  echo Error unzip ZLIB 
@@ -39,7 +42,12 @@ if NOT EXIST "include" (
    mkdir include
 )
 
-cd zlib-1.2.8\contrib\masmx86
+cd zlib-1.2.11\contrib\masmx86
+IF %ERRORLEVEL% NEQ 0 (
+  echo Error unzip ZLIB 
+  exit /b %ERRORLEVEL%
+)
+   
 ml /coff /Zi /c /safeseh /Flmatch686.lst match686.asm
 ml /coff /Zi /c /safeseh /Flinffas32.lst inffas32.asm
 cd ..\vstudio
