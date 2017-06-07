@@ -63,7 +63,7 @@
     <Link>
       <AdditionalDependencies>libpng16.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)libcairo.dll</OutputFile>
-      <AdditionalLibraryDirectories>..\..\zlib\lib;..\..\libpng\projects\vstudio\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\libpng\projects\vstudio\Debug;..\..\zlib\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(OutDir)libcairo.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
@@ -159,9 +159,42 @@
 	<ClCompile Include="..\src\cairo-surface-clipper.c" />
 	<ClCompile Include="..\src\cairo-boxes.c" />
 	<ClCompile Include="..\src\cairo-default-context.c" />
+	<ClCompile Include="..\src\cairo-recording-surface.c" />
+	<ClCompile Include="..\src\cairo-boxes-intersect.c" />
+	<ClCompile Include="..\src\cairo-spans-compositor.c" />
+	<ClCompile Include="..\src\cairo-line.c" />
+	<ClCompile Include="..\src\cairo-toy-font-face.c" />
+	<ClCompile Include="..\src\cairo-image-source.c" />
+	<ClCompile Include="..\src\cairo-path-stroke-polygon.c" />
+	<ClCompile Include="..\src\cairo-image-compositor.c" />
+	<ClCompile Include="..\src\cairo-bentley-ottmann-rectangular.c" />
+	<ClCompile Include="..\src\cairo-composite-rectangles.c" />
+	<ClCompile Include="..\src\cairo-pdf-operators.c" />
+	<ClCompile Include="..\src\cairo-raster-source-pattern.c" />
+	<ClCompile Include="..\src\cairo-image-info.c" />
+	<ClCompile Include="..\src\cairo-type3-glyph-surface.c" />
+	<ClCompile Include="..\src\cairo-surface-wrapper.c" />
+	<ClCompile Include="..\src\cairo-path-stroke-boxes.c" />
+	<ClCompile Include="..\src\cairo-type1-glyph-names.c" />
+	<ClCompile Include="..\src\cairo-shape-mask-compositor.c" />
+	<ClCompile Include="..\src\cairo-device.c" />
+	<ClCompile Include="..\src\cairo-tor-scan-converter.c" />
+	<ClCompile Include="..\src\cairo-pdf-shading.c" />
+	<ClCompile Include="..\src\cairo-surface-offset.c" />
+	<ClCompile Include="..\src\cairo-stroke-dash.c" />
+	<ClCompile Include="..\src\cairo-type1-subset.c" />
+	<ClCompile Include="..\src\cairo-mono-scan-converter.c" />
+	<ClCompile Include="..\src\cairo-damage.c" />
+	<ClCompile Include="..\src\cairo-spans.c" />
+	<ClCompile Include="..\src\cairo-fallback-compositor.c" />
+	<ClCompile Include="..\src\cairo-tor22-scan-converter.c" />
+	<ClCompile Include="..\src\cairo-surface-snapshot.c" />
+	<ClCompile Include="..\src\win32\cairo-win32-device.c" />
 	<ClCompile Include="..\src\win32\cairo-win32-display-surface.c" />
 	<ClCompile Include="..\src\win32\cairo-win32-gdi-compositor.c" />
 	<ClCompile Include="..\src\win32\cairo-win32-printing-surface.c" />
+	<ClCompile Include="..\boilerplate\cairo-boilerplate.c" />
+	<ClCompile Include="..\boilerplate\cairo-boilerplate-constructors.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\cairo-analysis-surface-private.h" />

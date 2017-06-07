@@ -39,35 +39,40 @@ IF NOT EXIST "protobuf-cpp-3.1.0.tar.gz" (
 	mkdir release
 	cd release
 	
-	echo build protobuf release
-	
-	if "%PLATFORM%"=="x64" (
-		cmake -G "Visual Studio 14 2015 Win64" -DCMAKE_INSTALL_PREFIX=../../../../protobuf ../.. >> ../../../../build_cmd.log
-	) else (
-		cmake -G "Visual Studio 14 2015" -DCMAKE_INSTALL_PREFIX=../../../../protobuf ../.. >> ../../../../build_cmd.log
-	)
-    
-	echo cmake result %ERRORLEVEL%
-	
-	IF %ERRORLEVEL% NEQ 0 (
-	  echo Error cmake build files protobuf
-	  exit /b %ERRORLEVEL%
-	)
-	
-	echo compiling
-	
-	cmake --build . --target install --config Release >> ../../../../build_cmd.log
-	
-	REM nmake check >> build_cmd.log
-	
-	REM echo build protobuf debug
-	
-	REM cd ..
-	REM mkdir debug
-	REM cd debug
-	REM cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=../../../../install ../.. >> build_cmd.log
-	REM cmake --build . >> build_cmd.log
+	cd %basedir%
 )
+
+cd protobuf-cpp\cmake\build
+
+echo build protobuf release
+
+if "%PLATFORM%"=="x64" (
+	cmake -G "Visual Studio 14 2015 Win64" -DCMAKE_INSTALL_PREFIX=../../../protobuf .. 
+) else (
+	cmake -G "Visual Studio 14 2015" -DCMAKE_INSTALL_PREFIX=../../../protobuf ..
+)
+
+echo cmake result %ERRORLEVEL%
+
+IF %ERRORLEVEL% NEQ 0 (
+  echo Error cmake build files protobuf
+  exit /b %ERRORLEVEL%
+)
+
+echo compiling
+
+cmake --build . --target install --config Release >> ../../../build_cmd.log
+
+REM nmake check >> build_cmd.log
+
+REM echo build protobuf debug
+
+REM cd ..
+REM mkdir debug
+REM cd debug
+REM cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=../../../../install ../.. >> build_cmd.log
+REM cmake --build . >> build_cmd.log
+
 
 
 :ExitError
