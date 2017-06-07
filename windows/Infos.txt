@@ -1,0 +1,5 @@
+https://github.com/DomAmato/Cairo-VS
+
+Build at D:\Mine\OpenSource\libosmscout-own\windows>
+
+build_cmake_vs2015.cmd D:\Mine\OpenSource\libosmscout-own\build
