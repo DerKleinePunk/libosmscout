@@ -33,7 +33,9 @@
 #include <osmscout/SimplifiedPath.h>
 
 #include <DrawWindow.h>
-#include <unistd.h>
+#ifndef _MSC_VER
+	#include <unistd.h>
+#endif
 
 DrawWindow::DrawWindow(QString variant, int sinCount, QWidget *parent)
    : QWidget(parent), variant(variant), sinCount(sinCount), cnt(0), startOffset(0), moveOffset(0)
@@ -216,7 +218,7 @@ void DrawWindow::drawLine(QPainter *painter, const osmscout::SimplifiedPath &p)
   */
 }
 
-void DrawWindow::paintEvent(QPaintEvent */* event */)
+void DrawWindow::paintEvent(QPaintEvent* /* event */)
 {
   QPainter painter(this);  
   painter.fillRect(0,0, width(), height(), QBrush(QColor::fromRgbF(1,1,1)));
