@@ -33,6 +33,9 @@
 #include <osmscout/LabelPath.h>
 
 #include <DrawWindow.h>
+#ifndef _MSC_VER
+	#include <unistd.h>
+#endif
 
 DrawWindow::DrawWindow(QString variant, int sinCount, QWidget *parent)
    : QWidget(parent), variant(variant), sinCount(sinCount), cnt(0), startOffset(0), moveOffset(0)
