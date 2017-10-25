@@ -10,23 +10,23 @@ if "%basedir%"=="" (
 
 cd %basedir%
 
-IF NOT EXIST "protobuf-cpp-3.1.0.tar.gz" (
-	wget https://github.com/google/protobuf/releases/download/v3.1.0/protobuf-cpp-3.1.0.tar.gz -O protobuf-cpp-3.1.0.tar.gz >> build_cmd.log
+IF NOT EXIST "protobuf-cpp-3.4.1.tar.gz" (
+	wget https://github.com/google/protobuf/releases/download/v3.4.1/protobuf-cpp-3.4.1.tar.gz -O protobuf-cpp-3.4.1.tar.gz >> build_cmd.log
 	IF %ERRORLEVEL% NEQ 0 (
 	  echo Error extract zlib
 	  exit /b %ERRORLEVEL%
 	)
-	7z x protobuf-cpp-3.1.0.tar.gz -so | 7z x -aoa -si -ttar -o"protobuf-cpp"
+	7z x protobuf-cpp-3.4.1.tar.gz -so | 7z x -aoa -si -ttar -o"protobuf-cpp"
 	rem 7z x protobuf-cpp-3.1.0.tar.gz -oprotobuf-cpp -y >> build_cmd.log
 	
 	cd protobuf-cpp
-	cd protobuf-3.1.0
+	cd protobuf-3.4.1
 	echo copy files to root build dir
 	
 	xcopy /R /F /Y /E /S *.* ..
 	
 	cd ..
-	rmdir /S /Q protobuf-3.1.0
+	rmdir /S /Q protobuf-3.4.1
 	
 	REM in release this allready included
 	REM git clone -b release-1.7.0 https://github.com/google/googlemock.git gmock
@@ -59,21 +59,21 @@ IF %ERRORLEVEL% NEQ 0 (
   exit /b %ERRORLEVEL%
 )
 
-echo compiling
-
+echo compiling release
 cmake --build . --target install --config Release >> ../../../build_cmd.log
 
-REM nmake check >> build_cmd.log
+IF %ERRORLEVEL% NEQ 0 (
+  echo Error cmake compiling protobuf
+  exit /b %ERRORLEVEL%
+)
 
-REM echo build protobuf debug
+echo compiling debug
+cmake --build . --target install --config Debug >> ../../../build_cmd.log
 
-REM cd ..
-REM mkdir debug
-REM cd debug
-REM cmake -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=../../../../install ../.. >> build_cmd.log
-REM cmake --build . >> build_cmd.log
-
-
+IF %ERRORLEVEL% NEQ 0 (
+  echo Error cmake compiling protobuf
+  exit /b %ERRORLEVEL%
+)
 
 :ExitError
 echo build Failed
