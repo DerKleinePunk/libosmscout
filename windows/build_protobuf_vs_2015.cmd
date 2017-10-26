@@ -3,9 +3,15 @@ SETLOCAL ENABLEEXTENSIONS
 echo Build protbuf with VS2015 on windows
 
 set basedir=%1
+set config=%2
 
 if "%basedir%"=="" (
-	goto ExitError
+   goto ExitError
+)
+
+if "%config%"=="" (
+   echo config not set
+   goto ExitError
 )
 
 cd %basedir%
@@ -16,40 +22,34 @@ IF NOT EXIST "protobuf-cpp-3.4.1.tar.gz" (
 	  echo Error extract zlib
 	  exit /b %ERRORLEVEL%
 	)
-	7z x protobuf-cpp-3.4.1.tar.gz -so | 7z x -aoa -si -ttar -o"protobuf-cpp"
-	rem 7z x protobuf-cpp-3.1.0.tar.gz -oprotobuf-cpp -y >> build_cmd.log
-	
-	cd protobuf-cpp
-	cd protobuf-3.4.1
-	echo copy files to root build dir
-	
-	xcopy /R /F /Y /E /S *.* ..
-	
-	cd ..
-	rmdir /S /Q protobuf-3.4.1
-	
-	REM in release this allready included
-	REM git clone -b release-1.7.0 https://github.com/google/googlemock.git gmock
-	REM cd gmock
-	REM git clone -b release-1.7.0 https://github.com/google/googletest.git gtest
-	
-	cd cmake
-	mkdir build 
-	cd build
-	mkdir release
-	cd release
-	
-	cd %basedir%
 )
+
+IF NOT EXIST "protobuf-cpp" (
+  7z x protobuf-cpp-3.4.1.tar.gz -so | 7z x -aoa -si -ttar -o"protobuf-cpp"
+  
+  cd protobuf-cpp
+  cd protobuf-3.4.1
+  echo copy files to root build dir
+
+  xcopy /R /F /Y /E /S *.* ..
+
+  cd ..
+  rmdir /S /Q protobuf-3.4.1
+  
+  cd cmake
+  mkdir build 
+)
+
+cd %basedir%
 
 cd protobuf-cpp\cmake\build
 
-echo build protobuf release
+echo build protobuf
 
 if "%PLATFORM%"=="x64" (
-	cmake -G "Visual Studio 14 2015 Win64" -DCMAKE_INSTALL_PREFIX=../../../protobuf .. 
+	cmake -G "Visual Studio 14 2015 Win64" -DCMAKE_INSTALL_PREFIX=../../../protobuf -Dprotobuf_MSVC_STATIC_RUNTIME=OFF .. >> ../../../build_cmd.log
 ) else (
-	cmake -G "Visual Studio 14 2015" -DCMAKE_INSTALL_PREFIX=../../../protobuf ..
+	cmake -G "Visual Studio 14 2015" -DCMAKE_INSTALL_PREFIX=../../../protobuf -Dprotobuf_MSVC_STATIC_RUNTIME=OFF .. >> ../../../build_cmd.log
 )
 
 echo cmake result %ERRORLEVEL%
@@ -59,22 +59,28 @@ IF %ERRORLEVEL% NEQ 0 (
   exit /b %ERRORLEVEL%
 )
 
-echo compiling release
-cmake --build . --target install --config Release >> ../../../build_cmd.log
+if "%config%" == "Release" (
+  echo compiling release
+  cmake --build . --target install --config Release >> ../../../build_cmd.log
+)
 
 IF %ERRORLEVEL% NEQ 0 (
   echo Error cmake compiling protobuf
   exit /b %ERRORLEVEL%
 )
 
-echo compiling debug
-cmake --build . --target install --config Debug >> ../../../build_cmd.log
+if "%config%" == "Debug" (
+  echo compiling debug
+  cmake --build . --target install --config Debug >> ../../../build_cmd.log
+)
 
 IF %ERRORLEVEL% NEQ 0 (
   echo Error cmake compiling protobuf
   exit /b %ERRORLEVEL%
 )
 
+exit /b %ERRORLEVEL%
+ 
 :ExitError
 echo build Failed
 echo Check LIBOSMBASEDIR is set
