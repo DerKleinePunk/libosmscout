@@ -238,8 +238,8 @@ if(MARISA_FOUND)
 endif()
 
 if (ICONV_FOUND)
-    target_include_directories(OSMScout PRIVATE ${ICONV_INCLUDE_DIRS})
-    target_link_libraries(OSMScout ${ICONV_LIBRARIES})
+  target_include_directories(${THE_TARGET_NAME} PRIVATE ${ICONV_INCLUDE_DIRS})
+  target_link_libraries(${THE_TARGET_NAME} ${ICONV_LIBRARIES})
 endif()
 
 if(CMAKE_THREAD_LIBS_INIT)
