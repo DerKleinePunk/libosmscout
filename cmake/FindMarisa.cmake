@@ -32,5 +32,24 @@ FIND_LIBRARY(MARISA_LIBRARIES
 		  /marisa/lib
 )
 
+FIND_LIBRARY(MARISA_LIBRARIES_DEBUG
+    NAMES marisad libmarisad
+    HINTS ${PC_MARISA_LIBDIR}
+          ${PC_MARISA_LIBRARY_DIRS}
+		  $ENV{MARISA_HOME}/lib
+		  $ENV{MARISA_ROOT}/lib
+		  /usr/local/lib
+		  /usr/lib
+		  /lib
+		  /marisa/lib
+)
+
+if(MARISA_LIBRARIES_DEBUG)
+	set(MARISA_LIBRARIES
+          optimized ${MARISA_LIBRARIES}
+          debug     ${MARISA_LIBRARIES_DEBUG}
+      )
+endif()
+
 INCLUDE(FindPackageHandleStandardArgs)
 FIND_PACKAGE_HANDLE_STANDARD_ARGS(MARISA DEFAULT_MSG MARISA_INCLUDE_DIRS MARISA_LIBRARIES)

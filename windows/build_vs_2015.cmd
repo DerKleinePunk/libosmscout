@@ -16,6 +16,14 @@ IF "%PLATFORM%"=="" (
    set PLATFORM=x32
 )
 
+IF EXIST "marisa" (
+   xcopy /R /F /Y /E /S marisa %BUILDDIR%\marisa\
+   IF %ERRORLEVEL% NEQ 0 (
+      echo Error copy files
+      exit /b %ERRORLEVEL%
+   )
+)
+
 cd %BUILDDIR%
 
 echo enter build dir
@@ -32,6 +40,10 @@ IF %PLATFORM%==x64 (
     7z x libxml2-2.9.3-win32-x86_64.7z -olibxml2 -y >> build_cmd.log
     echo ...done
 ) ELSE (
+	IF NOT EXIST "mingwrt-5.2.0-win32-x86.7z" (
+		wget http://xmlsoft.org/sources/win32/64bit/mingwrt-5.2.0-win32-x86.7z -O mingwrt-5.2.0-win32-x86.7z
+		REM Runtime for the xml lib
+	)
     IF NOT EXIST "zlib-1.2.8-win32-x86.7z" (
 		wget http://xmlsoft.org/sources/win32/64bit/zlib-1.2.8-win32-x86.7z -O zlib-1.2.8-win32-x86.7z
 	)
@@ -43,16 +55,21 @@ IF %PLATFORM%==x64 (
 	)
 	
 	echo Unpacking library dependencies...
+	
+	IF NOT EXIST "mingwrt-5.2.0" (
+	   7z x mingwrt-5.2.0-win32-x86.7z -omingwrt-5.2.0 -y >> build_cmd.log
+	)
+	
 	IF NOT EXIST "zlib" (
 	   7z x zlib-1.2.8-win32-x86.7z -ozlib -y >> build_cmd.log
 	)
 	
-	IF NOT EXIST ".\zlip\lib\zlib1.lib" (
+	IF NOT EXIST ".\zlip\lib\zlib.lib" (
 	    REM https://stackoverflow.com/questions/9946322/how-to-generate-an-import-library-lib-file-from-a-dll
 		dumpbin /exports .\zlib\bin\zlib1.dll > .\zlib\lib\zlib.txt
 		echo dumpbin done
-		REM echo LIBRARY XML > .\libxml2\lib\libxml.def
-		echo EXPORTS > .\zlib\lib\zlib.def
+		echo LIBRARY zlib1 > .\zlib\lib\zlib.def
+		echo EXPORTS >> .\zlib\lib\zlib.def
 		REM for /f "usebackq tokens=4,* delims=_ " %%i in (`dumpbin /exports ".\libxml2\bin\libxml2-2.dll"`) do if %%i==xml echo %%i_%j >> .\libxml2\lib\libxml.def
 		REM Todo filter the internal functions out
 		for /f "skip=19 tokens=4" %%A in (.\zlib\lib\zlib.txt) do echo %%A >> .\zlib\lib\zlib.def
@@ -66,8 +83,8 @@ IF %PLATFORM%==x64 (
 	IF NOT EXIST ".\iconv\lib\libiconv.lib" (
 	    REM https://stackoverflow.com/questions/9946322/how-to-generate-an-import-library-lib-file-from-a-dll
 		dumpbin /exports .\iconv\bin\libiconv-2.dll > .\iconv\lib\libiconv.txt
-		REM echo LIBRARY XML > .\libxml2\lib\libxml.def
-		echo EXPORTS > .\iconv\lib\libiconv.def
+		echo LIBRARY libiconv-2 > .\iconv\lib\libiconv.def
+		echo EXPORTS >> .\iconv\lib\libiconv.def
 		REM for /f "usebackq tokens=4,* delims=_ " %%i in (`dumpbin /exports ".\libxml2\bin\libxml2-2.dll"`) do if %%i==xml echo %%i_%j >> .\libxml2\lib\libxml.def
 		REM Todo filter the internal functions out
 		for /f "skip=19 tokens=4" %%A in (.\iconv\lib\libiconv.txt) do echo %%A >> .\iconv\lib\libiconv.def
@@ -82,7 +99,7 @@ IF %PLATFORM%==x64 (
 	IF NOT EXIST ".\libxml2\lib\libxml2.lib" (
 	    REM https://stackoverflow.com/questions/9946322/how-to-generate-an-import-library-lib-file-from-a-dll
 		dumpbin /exports .\libxml2\bin\libxml2-2.dll > .\libxml2\lib\libxml.txt
-		echo LIBRARY XML > .\libxml2\lib\libxml.def
+		echo LIBRARY libxml2-2 > .\libxml2\lib\libxml.def
 		echo EXPORTS >> .\libxml2\lib\libxml.def
 		REM for /f "usebackq tokens=4,* delims=_ " %%i in (`dumpbin /exports ".\libxml2\bin\libxml2-2.dll"`) do if %%i==xml echo %%i_%j >> .\libxml2\lib\libxml.def
 		REM Todo filter the internal functions out
@@ -91,26 +108,56 @@ IF %PLATFORM%==x64 (
 	)
 )
 
+title Building protobuf debug
+call %LIBOSMBASEDIR%windows/build_protobuf_vs_2015.cmd %BUILDDIR% Debug
+
+echo protobuf build result %ERRORLEVEL%
+
+IF %ERRORLEVEL% NEQ 0 (
+  echo Error build protobuf debug
+  exit /b %ERRORLEVEL%
+)
+
+title Building protobuf release
 call %LIBOSMBASEDIR%windows/build_protobuf_vs_2015.cmd %BUILDDIR% Release
 
 echo protobuf build result %ERRORLEVEL%
 
 IF %ERRORLEVEL% NEQ 0 (
-  echo Error build protobuf
+  echo Error build protobuf release
   exit /b %ERRORLEVEL%
 )
 
 rem Cmake only Seatch lib PNG when zlib is found !
 REM lippng needs two config headers pnglibconf.h and pngconf.h
+rem find a way for marisa debug lib without an new path
+SET MARISA_ROOT=%BUILDDIR%\marisa
 
-set CMAKE_INCLUDE_PATH=%BUILDDIR%\iconv\include;%BUILDDIR%\libxml2\include;%BUILDDIR%\protobuf\include;%BUILDDIR%\zlib\include;
+set CMAKE_INCLUDE_PATH=%BUILDDIR%\iconv\include;%BUILDDIR%\libxml2\include;%BUILDDIR%\protobuf\include;%BUILDDIR%\zlib\include
 set CMAKE_LIBRARY_PATH=%BUILDDIR%\iconv\lib;%BUILDDIR%\libxml2\lib;%BUILDDIR%\protobuf\lib;%BUILDDIR%\zlib\lib;
 SET CMAKE_PROGRAM_PATH=%BUILDDIR%\protobuf\bin;%BUILDDIR%\libxml2\bin
 
 if "%PLATFORM%"=="x64" (
+    title Building osmscout 64
 	cmake -G "Visual Studio 14 2015 Win64" -DCMAKE_SYSTEM_VERSION=10.0.##### .. -DCMAKE_INSTALL_PREFIX=.\output -DOSMSCOUT_BUILD_DOC_API=OFF -DOSMSCOUT_BUILD_TESTS=ON -DQTDIR=%QTDIR% -DCMAKE_PREFIX_PATH=%QTDIR%/lib/cmake >> build_cmd.log
 ) else (
+    title Building osmscout 32
 	cmake -G "Visual Studio 14 2015" -DCMAKE_SYSTEM_VERSION=10.0.##### .. -DCMAKE_INSTALL_PREFIX=.\output -DOSMSCOUT_BUILD_DOC_API=OFF -DOSMSCOUT_BUILD_TESTS=ON -DQTDIR=%QTDIR% -DCMAKE_PREFIX_PATH=%QTDIR%/lib/cmake >> build_cmd.log
 )
+title compiling osmscout debug
 cmake --build . --target install --config Debug >> build_cmd.log
-rem cmake --build . --target install --config Release
+
+IF %ERRORLEVEL% NEQ 0 (
+  echo Error build osmscout debug
+  title error
+  exit /b %ERRORLEVEL%
+)
+
+title compiling osmscout release
+cmake --build . --target install --config Release >> build_cmd.log
+
+IF %ERRORLEVEL% NEQ 0 (
+  echo Error build osmscout release
+  title error
+  exit /b %ERRORLEVEL%
+)

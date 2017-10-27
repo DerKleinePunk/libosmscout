@@ -46,7 +46,7 @@ if(ICONV_INCLUDE_DIR AND ICONV_LIBRARIES)
     if(ICONV_HAVE_WERROR)
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
     endif(ICONV_HAVE_WERROR)
-    check_c_source_compiles("
+    check_cxx_source_compiles("
         #include <iconv.h>
         int main(){
         iconv_t conv = 0;
@@ -54,7 +54,7 @@ if(ICONV_INCLUDE_DIR AND ICONV_LIBRARIES)
         size_t ilen = 0;
         char* out = 0;
         size_t olen = 0;
-        iconv(conv, &in, &ilen, &out, &olen);
+        iconv(conv, (const char**)&in, &ilen, &out, &olen);
         return 0;
         }
     " ICONV_SECOND_ARGUMENT_IS_CONST )

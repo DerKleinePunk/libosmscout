@@ -68,6 +68,11 @@ target_include_directories(StyleEditor PRIVATE
 		${OSMSCOUT_BASE_DIR_SOURCE}/libosmscout-client-qt/include
 )
 
+if(MARISA_FOUND)
+    target_include_directories(StyleEditor PRIVATE ${MARISA_INCLUDE_DIRS})
+    target_link_libraries(StyleEditor ${MARISA_LIBRARIES})
+endif()
+
 if(APPLE)
 	target_link_libraries(StyleEditor
 		OSMScout

@@ -16,8 +16,8 @@ if "%config%"=="" (
 
 cd %basedir%
 
-IF NOT EXIST "protobuf-cpp-3.4.1.tar.gz" (
-	wget https://github.com/google/protobuf/releases/download/v3.4.1/protobuf-cpp-3.4.1.tar.gz -O protobuf-cpp-3.4.1.tar.gz >> build_cmd.log
+IF NOT EXIST "protobuf-cpp-3.2.0.tar.gz" (
+	wget https://github.com/google/protobuf/releases/download/v3.2.0/protobuf-cpp-3.2.0.tar.gz -O protobuf-cpp-3.2.0.tar.gz >> build_cmd.log
 	IF %ERRORLEVEL% NEQ 0 (
 	  echo Error extract zlib
 	  exit /b %ERRORLEVEL%
@@ -25,16 +25,16 @@ IF NOT EXIST "protobuf-cpp-3.4.1.tar.gz" (
 )
 
 IF NOT EXIST "protobuf-cpp" (
-  7z x protobuf-cpp-3.4.1.tar.gz -so | 7z x -aoa -si -ttar -o"protobuf-cpp"
+  7z x protobuf-cpp-3.2.0.tar.gz -so | 7z x -aoa -si -ttar -o"protobuf-cpp"
   
   cd protobuf-cpp
-  cd protobuf-3.4.1
+  cd protobuf-3.2.0
   echo copy files to root build dir
 
   xcopy /R /F /Y /E /S *.* ..
 
   cd ..
-  rmdir /S /Q protobuf-3.4.1
+  rmdir /S /Q protobuf-3.2.0
   
   cd cmake
   mkdir build 
@@ -45,7 +45,7 @@ cd %basedir%
 cd protobuf-cpp\cmake\build
 
 echo build protobuf
-
+rem google say static build is better but libosmscout do not support it at the moment
 if "%PLATFORM%"=="x64" (
 	cmake -G "Visual Studio 14 2015 Win64" -DCMAKE_INSTALL_PREFIX=../../../protobuf -Dprotobuf_MSVC_STATIC_RUNTIME=OFF .. >> ../../../build_cmd.log
 ) else (

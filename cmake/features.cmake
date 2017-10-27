@@ -93,6 +93,7 @@ check_function_exists(mallinfo HAVE_MALLINFO)
 find_package(Marisa)
 find_package(LibXml2)
 find_package(MyProtobuf) # Modified FindProtobuf
+# find_package(Protobuf)
 find_package(ZLIB)
 find_package(iconv)
 find_package(LibLZMA)
