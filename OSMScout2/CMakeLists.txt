@@ -109,8 +109,39 @@ target_link_libraries(OSMScout2
 	OSMScoutGPX
 )
 
-if (Qt5Svg_FOUND)
-	target_link_libraries(OSMScout2 Qt5::Svg)
+if(MARISA_FOUND)
+    target_include_directories(OSMScout2 PRIVATE ${MARISA_INCLUDE_DIRS})
+    target_link_libraries(OSMScout2 ${MARISA_LIBRARIES})
+endif()
+
+if(APPLE)
+	target_link_libraries(OSMScout2
+		OSMScout
+        	OSMScoutMap
+        	Qt5::Core
+        	Qt5::Gui
+        	Qt5::Widgets
+        	Qt5::Qml
+        	Qt5::Quick
+        	Qt5::Svg
+        	Qt5::Positioning
+        	OSMScoutMapQt
+        	OSMScoutClientQt
+	)
+else()
+	target_link_libraries(OSMScout2
+		osmscout
+        	osmscout_map
+        	Qt5::Core
+        	Qt5::Gui
+        	Qt5::Widgets
+        	Qt5::Qml
+        	Qt5::Quick
+        	Qt5::Svg
+        	Qt5::Positioning
+        	osmscout_map_qt
+        	osmscout_client_qt
+	)
 endif()
 
 if (Qt5Positioning_FOUND)

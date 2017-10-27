@@ -166,8 +166,10 @@ if(MARISA_FOUND)
 endif()
 
 if(WIN32)
-  target_link_libraries(OSMScoutImport Ws2_32.lib)
-  target_compile_definitions(OSMScoutImport PRIVATE -DPROTOBUF_USE_DLLS)
+  target_link_libraries(${THE_TARGET_NAME} Ws2_32.lib)
+  if(protobuf_BUILD_SHARED_LIBS)
+    target_compile_definitions(${THE_TARGET_NAME} PRIVATE -DPROTOBUF_USE_DLLS)
+  endif()	
 endif()
 
 #if(${IOS})
