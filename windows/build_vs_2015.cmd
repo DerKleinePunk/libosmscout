@@ -3,6 +3,8 @@ SETLOCAL ENABLEEXTENSIONS
 set LIBOSMBASEDIR=%~dp0
 set LIBOSMBASEDIR=%LIBOSMBASEDIR:windows\=%
 set QTDIR=D:/Tools/Qt/5.9.2/msvc2015
+echo Attention no dirs with space are used Able !
+
 echo %LIBOSMBASEDIR%
 echo %QTDIR%
 
@@ -161,3 +163,13 @@ IF %ERRORLEVEL% NEQ 0 (
   title error
   exit /b %ERRORLEVEL%
 )
+
+rem Todo
+rem mingwrt-5.2.0 to Output
+rem copy marisa h to output to Output
+rem build map data
+rem copy OSMScout2 to Output
+rem doku how to start OSMScout2 
+rem path to D:\Tools\Qt\5.9.2\msvc2015\bin
+rem set OSMSCOUT_LOG=DEBUG
+rem ..\build\output\bin\OSMScout2 D:\Mine\OpenSource\libosmscout-own\maps\hessen D:\Mine\OpenSource\libosmscout-own\stylesheets\standard.oss
