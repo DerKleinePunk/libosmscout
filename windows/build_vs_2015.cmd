@@ -164,6 +164,13 @@ IF %ERRORLEVEL% NEQ 0 (
   exit /b %ERRORLEVEL%
 )
 
+title copy depens
+
+xcopy /R /F /Y /E /S %BUILDDIR%\iconv\bin\*.dll %BUILDDIR%\output\bin\ 
+xcopy /R /F /Y /E /S %BUILDDIR%\mingwrt-5.2.0\bin\*.dll %BUILDDIR%\output\bin\
+xcopy /R /F /Y /E /S %BUILDDIR%\libxml2\bin\*.dll %BUILDDIR%\output\bin\ 
+xcopy /R /F /Y /E /S %BUILDDIR%\zlib\bin\*.dll %BUILDDIR%\output\bin\ 
+
 rem Todo
 rem mingwrt-5.2.0 to Output
 rem copy marisa h to output to Output

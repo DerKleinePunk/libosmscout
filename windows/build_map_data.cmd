@@ -16,6 +16,7 @@ if "%arg1%" == "" (
    set arg1=local
 )
 
+echo scriptdir "%scriptdir%"
 echo Command line parameter "%arg1%"
 
 IF EXIST "%arg1%-latest.osm.pbf" (
