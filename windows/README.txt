@@ -1,5 +1,7 @@
 ### Building with VS 2015 the lib
 
+!Attention no dirs with space are used Able!
+
 the start script is 
 build_vs_2015.cmd
 
@@ -33,3 +35,18 @@ build_vs_2015.cmd D:\Mine\OpenSource\libosmscout-own\build
 wget
 7z
 cmake must be call able from command line
+
+
+Install https://chocolatey.org/
+Run Developer Command Prompt for VS2015 as administrator
+
+check 7zip is in Path
+check wget is in path
+check cmake is in path
+
+check CScript is installed (libxml)
+
+-- 7 zip commandline Tools
+choco install 7zip.commandline
+-- wget download with http 
+cinst -y wget -x86
