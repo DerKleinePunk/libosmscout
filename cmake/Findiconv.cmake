@@ -41,10 +41,10 @@ endif()
 if(ICONV_INCLUDE_DIR AND ICONV_LIBRARIES)
     set(CMAKE_REQUIRED_INCLUDES ${ICONV_INCLUDE_DIR})
     set(CMAKE_REQUIRED_LIBRARIES ${ICONV_LIBRARIES})
-    check_c_compiler_flag("-Werror" ICONV_HAVE_WERROR)
-    set (CMAKE_C_FLAGS_BACKUP "${CMAKE_C_FLAGS}")
+    CHECK_CXX_COMPILER_FLAG("-Werror" ICONV_HAVE_WERROR)
+    set (CMAKE_CXX_FLAGS_BACKUP "${CMAKE_CXX_FLAGS}")
     if(ICONV_HAVE_WERROR)
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
     endif(ICONV_HAVE_WERROR)
     check_cxx_source_compiles("
         #include <iconv.h>
@@ -58,7 +58,7 @@ if(ICONV_INCLUDE_DIR AND ICONV_LIBRARIES)
         return 0;
         }
     " ICONV_SECOND_ARGUMENT_IS_CONST )
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS_BACKUP}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_BACKUP}")
 endif()
 
 include(FindPackageHandleStandardArgs)

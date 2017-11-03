@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.6)
 
-project(libosmscout C CXX)
+project(libosmscout CXX)
 
 # If we are called from conan, include and activate it cmake additions
 if(EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
@@ -36,7 +36,7 @@ endif ()
 
 # TODO: This will not work for cross-compiling :-/
 include(CheckTypeSize)
-CHECK_TYPE_SIZE("void*" OSMSCOUT_PTR_SIZE BUILTIN_TYPES_ONLY)
+CHECK_TYPE_SIZE("void*" OSMSCOUT_PTR_SIZE BUILTIN_TYPES_ONLY LANGUAGE CXX)
 if(OSMSCOUT_PTR_SIZE EQUAL 8)
   set(OSMSCOUT_PLATFORM_X64 TRUE)
 else ()

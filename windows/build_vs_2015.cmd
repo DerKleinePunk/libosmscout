@@ -142,9 +142,19 @@ SET CMAKE_PROGRAM_PATH=%BUILDDIR%\protobuf\bin;%BUILDDIR%\libxml2\bin
 if "%PLATFORM%"=="x64" (
     title Building osmscout 64
 	cmake -G "Visual Studio 14 2015 Win64" -DCMAKE_SYSTEM_VERSION=10.0.##### .. -DCMAKE_INSTALL_PREFIX=.\output -DOSMSCOUT_BUILD_DOC_API=OFF -DOSMSCOUT_BUILD_TESTS=ON -DQTDIR=%QTDIR% -DCMAKE_PREFIX_PATH=%QTDIR%/lib/cmake >> build_cmd.log
+	IF %ERRORLEVEL% NEQ 0 (
+	  echo Error creating osmscout config
+      title error
+      exit /b %ERRORLEVEL%
+	)
 ) else (
     title Building osmscout 32
 	cmake -G "Visual Studio 14 2015" -DCMAKE_SYSTEM_VERSION=10.0.##### .. -DCMAKE_INSTALL_PREFIX=.\output -DOSMSCOUT_BUILD_DOC_API=OFF -DOSMSCOUT_BUILD_TESTS=ON -DQTDIR=%QTDIR% -DCMAKE_PREFIX_PATH=%QTDIR%/lib/cmake >> build_cmd.log
+	IF %ERRORLEVEL% NEQ 0 (
+	  echo Error creating osmscout config
+      title error
+      exit /b %ERRORLEVEL%
+	)
 )
 title compiling osmscout debug
 cmake --build . --target install --config Debug >> build_cmd.log
