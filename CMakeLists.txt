@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.6)
 
-project(libosmscout C CXX)
+project(libosmscout CXX)
 
 set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON) # build should fail when compiler don't support standard defined by CMAKE_CXX_STANDARD
@@ -38,7 +38,7 @@ if(NOT MSVC)
 endif()
 
 include(CheckTypeSize)
-CHECK_TYPE_SIZE("void*" OSMSCOUT_PTR_SIZE BUILTIN_TYPES_ONLY)
+CHECK_TYPE_SIZE("void*" OSMSCOUT_PTR_SIZE BUILTIN_TYPES_ONLY LANGUAGE CXX)
 if(OSMSCOUT_PTR_SIZE EQUAL 8)
   set(OSMSCOUT_PLATFORM_X64 TRUE)
 else ()

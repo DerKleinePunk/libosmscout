@@ -1,6 +1,10 @@
 @echo off
 SETLOCAL ENABLEEXTENSIONS
-echo Build protbuf with VS2015 on windows
+if "%PLATFORM%"=="x64" (
+   echo Build protobuf with VS2015 Win64 on windows
+) else (
+   echo Build protobuf with VS2015 on windows
+)
 
 set basedir=%1
 set config=%2

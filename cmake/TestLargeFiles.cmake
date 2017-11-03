@@ -27,7 +27,7 @@ macro(OPJ_TEST_LARGE_FILES VARIABLE)
 
         # First check without any special flags
         try_compile(FILE64_OK "${PROJECT_BINARY_DIR}"
-                    "${PROJECT_SOURCE_DIR}/cmake/TestFileOffsetBits.c")
+                    "${PROJECT_SOURCE_DIR}/cmake/TestFileOffsetBits.cpp")
         if(FILE64_OK)
           message(STATUS "Checking for 64-bit off_t - present")
        	endif()
@@ -35,7 +35,7 @@ macro(OPJ_TEST_LARGE_FILES VARIABLE)
         if(NOT FILE64_OK)
             # Test with _FILE_OFFSET_BITS=64
             try_compile(FILE64_OK "${PROJECT_BINARY_DIR}"
-                        "${PROJECT_SOURCE_DIR}/cmake/TestFileOffsetBits.c"
+                        "${PROJECT_SOURCE_DIR}/cmake/TestFileOffsetBits.cpp"
                         COMPILE_DEFINITIONS "-D_FILE_OFFSET_BITS=64" )
             if(FILE64_OK)
                 message(STATUS "Checking for 64-bit off_t - present with _FILE_OFFSET_BITS=64")
@@ -46,7 +46,7 @@ macro(OPJ_TEST_LARGE_FILES VARIABLE)
         if(NOT FILE64_OK)
             # Test with _LARGE_FILES
             try_compile(FILE64_OK "${PROJECT_BINARY_DIR}"
-                        "${PROJECT_SOURCE_DIR}/cmake/TestFileOffsetBits.c"
+                        "${PROJECT_SOURCE_DIR}/cmake/TestFileOffsetBits.cpp"
                         COMPILE_DEFINITIONS "-D_LARGE_FILES" )
             if(FILE64_OK)
                 message(STATUS "Checking for 64-bit off_t - present with _LARGE_FILES")
@@ -57,7 +57,7 @@ macro(OPJ_TEST_LARGE_FILES VARIABLE)
         if(NOT FILE64_OK)
             # Test with _LARGEFILE_SOURCE
             try_compile(FILE64_OK "${PROJECT_BINARY_DIR}"
-                        "${PROJECT_SOURCE_DIR}/cmake/TestFileOffsetBits.c"
+                        "${PROJECT_SOURCE_DIR}/cmake/TestFileOffsetBits.cpp"
                         COMPILE_DEFINITIONS "-D_LARGEFILE_SOURCE" )
             if(FILE64_OK)
                 message(STATUS "Checking for 64-bit off_t - present with _LARGEFILE_SOURCE")
@@ -75,13 +75,13 @@ macro(OPJ_TEST_LARGE_FILES VARIABLE)
 
         # Set the flags we might have determined to be required above
         configure_file("${PROJECT_SOURCE_DIR}/cmake/TestLargeFiles.c.cmake.in"
-                       "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/TestLargeFiles.c")
+                       "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/TestLargeFiles.cpp")
 
         message(STATUS "Checking for _fseeki64/_ftelli64")
 
         # now check for Windows stuff
         try_compile(FSEEKI64_COMPILE_OK "${PROJECT_BINARY_DIR}"
-                    "${PROJECT_SOURCE_DIR}/cmake/TestWindowsFSeek.c")
+                    "${PROJECT_SOURCE_DIR}/cmake/TestWindowsFSeek.cpp")
 
 	    if(FSEEKI64_COMPILE_OK)
             message(STATUS "Checking for _fseeki64/_ftelli64 - present")
@@ -97,7 +97,7 @@ macro(OPJ_TEST_LARGE_FILES VARIABLE)
 	    # Test if ftello/fseeko are	available
 	    try_compile(FSEEKO_COMPILE_OK
 	                "${PROJECT_BINARY_DIR}"
-                    "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/TestLargeFiles.c")
+                    "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/TestLargeFiles.cpp")
 	
 	    if(FSEEKO_COMPILE_OK)
             message(STATUS "Checking for fseeko/ftello - present")
@@ -107,7 +107,7 @@ macro(OPJ_TEST_LARGE_FILES VARIABLE)
                 # glibc 2.2 needs _LARGEFILE_SOURCE for fseeko (but not for 64-bit off_t...)
                 try_compile(FSEEKO_COMPILE_OK
                             "${PROJECT_BINARY_DIR}"
-                            "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/TestLargeFiles.c"
+                            "${PROJECT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/TestLargeFiles.cpp"
                             COMPILE_DEFINITIONS "-D_LARGEFILE_SOURCE" )
 
                 if(FSEEKO_COMPILE_OK)
