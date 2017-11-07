@@ -50,3 +50,11 @@ check CScript is installed (libxml)
 choco install 7zip.commandline
 -- wget download with http 
 cinst -y wget -x86
+
+https://www.nuget.org/api/v2/package/libiconv/1.14.0.11
+https://www.nuget.org/api/v2/package/libxml2/2.7.8.7
+
+### Multicore
+https://stackoverflow.com/questions/2166425/how-to-structure-a-c-application-to-use-a-multicore-processor
+http://www.bogotobogo.com/cplusplus/multithreaded4_cplusplus11.php
+https://katyscode.wordpress.com/2013/08/17/c11-multi-core-programming-ppl-parallel-aggregation-explained/
