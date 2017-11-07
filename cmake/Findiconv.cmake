@@ -40,25 +40,12 @@ endif()
 
 if(ICONV_INCLUDE_DIR AND ICONV_LIBRARIES)
     set(CMAKE_REQUIRED_INCLUDES ${ICONV_INCLUDE_DIR})
-    set(CMAKE_REQUIRED_LIBRARIES ${ICONV_LIBRARIES})
-    CHECK_CXX_COMPILER_FLAG("-Werror" ICONV_HAVE_WERROR)
-    set (CMAKE_CXX_FLAGS_BACKUP "${CMAKE_CXX_FLAGS}")
-    if(ICONV_HAVE_WERROR)
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
-    endif(ICONV_HAVE_WERROR)
-    check_cxx_source_compiles("
-        #include <iconv.h>
-        int main(){
-        iconv_t conv = 0;
-        const char* in = 0;
-        size_t ilen = 0;
-        char* out = 0;
-        size_t olen = 0;
-        iconv(conv, (const char**)&in, &ilen, &out, &olen);
-        return 0;
-        }
-    " ICONV_SECOND_ARGUMENT_IS_CONST )
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_BACKUP}")
+    check_prototype_definition("iconv"
+            "size_t iconv(iconv_t cd, const char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)"
+            "-1"
+            "iconv.h"
+            ICONV_SECOND_ARGUMENT_IS_CONST)
+    set(CMAKE_REQUIRED_INCLUDES)
 endif()
 
 include(FindPackageHandleStandardArgs)
