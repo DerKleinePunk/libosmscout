@@ -53,6 +53,9 @@ cinst -y wget -x86
 
 https://www.nuget.org/api/v2/package/libiconv/1.14.0.11
 https://www.nuget.org/api/v2/package/libxml2/2.7.8.7
+https://www.nuget.org/api/v2/package/cairo/1.12.18
+
+https://blog.nuget.org/20130426/native-support.html
 
 ### Multicore
 https://stackoverflow.com/questions/2166425/how-to-structure-a-c-application-to-use-a-multicore-processor
