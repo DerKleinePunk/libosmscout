@@ -2,7 +2,7 @@
 SETLOCAL ENABLEEXTENSIONS
 set LIBOSMBASEDIR=%~dp0
 set LIBOSMBASEDIR=%LIBOSMBASEDIR:windows\=%
-set QTDIR=D:/Tools/Qt/5.9.2/msvc2015
+set QTDIR=F:/Tools/Qt/5.10.0/msvc2015
 echo Attention no dirs with space are used Able !
 
 echo %LIBOSMBASEDIR%
@@ -138,10 +138,13 @@ SET MARISA_ROOT=%BUILDDIR%\marisa
 set CMAKE_INCLUDE_PATH=%BUILDDIR%\iconv\include;%BUILDDIR%\libxml2\include;%BUILDDIR%\protobuf\include;%BUILDDIR%\zlib\include
 set CMAKE_LIBRARY_PATH=%BUILDDIR%\iconv\lib;%BUILDDIR%\libxml2\lib;%BUILDDIR%\protobuf\lib;%BUILDDIR%\zlib\lib;
 SET CMAKE_PROGRAM_PATH=%BUILDDIR%\protobuf\bin;%BUILDDIR%\libxml2\bin
+SET CMAKE_PREFIX_PATH=%QTDIR%/lib/cmake
+
+REM -DOSMSCOUT_BUILD_DEMOS=OFF because the new GPX Demos is not ebal to build with vs2015
 
 if "%PLATFORM%"=="x64" (
     title Building osmscout 64
-	cmake -G "Visual Studio 14 2015 Win64" -DCMAKE_SYSTEM_VERSION=10.0.##### .. -DCMAKE_INSTALL_PREFIX=.\output -DOSMSCOUT_BUILD_DOC_API=OFF -DOSMSCOUT_BUILD_TESTS=ON -DQTDIR=%QTDIR% -DCMAKE_PREFIX_PATH=%QTDIR%/lib/cmake >> build_cmd.log
+	cmake -G "Visual Studio 14 2015 Win64" -DCMAKE_SYSTEM_VERSION=10.0.##### .. -DCMAKE_INSTALL_PREFIX=.\output -DOSMSCOUT_BUILD_DOC_API=OFF -DOSMSCOUT_BUILD_DEMOS=OFF -DOSMSCOUT_BUILD_TESTS=ON -DQTDIR=%QTDIR% -DCMAKE_PREFIX_PATH=%QTDIR%/lib/cmake >> build_cmd.log
 	IF %ERRORLEVEL% NEQ 0 (
 	  echo Error creating osmscout config
       title error
@@ -149,7 +152,7 @@ if "%PLATFORM%"=="x64" (
 	)
 ) else (
     title Building osmscout 32
-	cmake -G "Visual Studio 14 2015" -DCMAKE_SYSTEM_VERSION=10.0.##### .. -DCMAKE_INSTALL_PREFIX=.\output -DOSMSCOUT_BUILD_DOC_API=OFF -DOSMSCOUT_BUILD_TESTS=ON -DQTDIR=%QTDIR% -DCMAKE_PREFIX_PATH=%QTDIR%/lib/cmake >> build_cmd.log
+	cmake -G "Visual Studio 14 2015" -DCMAKE_SYSTEM_VERSION=10.0.##### .. -DCMAKE_INSTALL_PREFIX=.\output -DOSMSCOUT_BUILD_DOC_API=OFF -DOSMSCOUT_BUILD_DEMOS=OFF -DOSMSCOUT_BUILD_TESTS=ON -DQTDIR=%QTDIR% -DCMAKE_PREFIX_PATH=%QTDIR%/lib/cmake >> build_cmd.log
 	IF %ERRORLEVEL% NEQ 0 (
 	  echo Error creating osmscout config
       title error
