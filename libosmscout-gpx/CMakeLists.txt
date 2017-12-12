@@ -56,6 +56,11 @@ if(LIBXML2_FOUND)
     target_link_libraries(${THE_TARGET_NAME} ${LIBXML2_LIBRARIES})
 endif()
 
+if (ICONV_FOUND)
+    target_include_directories(${THE_TARGET_NAME} PRIVATE ${ICONV_INCLUDE_DIRS})
+    target_link_libraries(${THE_TARGET_NAME} ${ICONV_LIBRARIES})
+endif()
+
 if(APPLE)
   target_link_libraries(${THE_TARGET_NAME} OSMScout)
 else()
