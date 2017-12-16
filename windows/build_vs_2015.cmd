@@ -144,7 +144,7 @@ REM -DOSMSCOUT_BUILD_DEMOS=OFF because the new GPX Demos is not ebal to build wi
 
 if "%PLATFORM%"=="x64" (
     title Building osmscout 64
-	cmake -G "Visual Studio 14 2015 Win64" -DCMAKE_SYSTEM_VERSION=10.0.##### .. -DCMAKE_INSTALL_PREFIX=.\output -DOSMSCOUT_BUILD_DOC_API=OFF -DOSMSCOUT_BUILD_DEMOS=OFF -DOSMSCOUT_BUILD_TESTS=ON -DQTDIR=%QTDIR% -DCMAKE_PREFIX_PATH=%QTDIR%/lib/cmake >> build_cmd.log
+	cmake -G "Visual Studio 14 2015 Win64" -DCMAKE_SYSTEM_VERSION=10.0.##### .. -DCMAKE_INSTALL_PREFIX=.\output -DOSMSCOUT_BUILD_DOC_API=OFF -DOSMSCOUT_BUILD_TESTS=ON -DQTDIR=%QTDIR% -DCMAKE_PREFIX_PATH=%QTDIR%/lib/cmake >> build_cmd.log
 	IF %ERRORLEVEL% NEQ 0 (
 	  echo Error creating osmscout config
       title error
@@ -152,7 +152,7 @@ if "%PLATFORM%"=="x64" (
 	)
 ) else (
     title Building osmscout 32
-	cmake -G "Visual Studio 14 2015" -DCMAKE_SYSTEM_VERSION=10.0.##### .. -DCMAKE_INSTALL_PREFIX=.\output -DOSMSCOUT_BUILD_DOC_API=OFF -DOSMSCOUT_BUILD_DEMOS=OFF -DOSMSCOUT_BUILD_TESTS=ON -DQTDIR=%QTDIR% -DCMAKE_PREFIX_PATH=%QTDIR%/lib/cmake >> build_cmd.log
+	cmake -G "Visual Studio 14 2015" -DCMAKE_SYSTEM_VERSION=10.0.##### .. -DCMAKE_INSTALL_PREFIX=.\output -DOSMSCOUT_BUILD_DOC_API=OFF -DOSMSCOUT_BUILD_TESTS=ON -DQTDIR=%QTDIR% -DCMAKE_PREFIX_PATH=%QTDIR%/lib/cmake >> build_cmd.log
 	IF %ERRORLEVEL% NEQ 0 (
 	  echo Error creating osmscout config
       title error
