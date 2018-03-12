@@ -51,9 +51,13 @@ build/
 **/.project
 **/.settings
 **/.classpath
+**/nbproject
 
 # Backup
 **/*~
 
 # Build dir
 build/
+# Usual build dir
+/build/
+
