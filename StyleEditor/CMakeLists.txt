@@ -68,12 +68,7 @@ target_include_directories(StyleEditor PRIVATE
 		${OSMSCOUT_BASE_DIR_SOURCE}/libosmscout-client-qt/include
 )
 
-if(MARISA_FOUND)
-    target_include_directories(StyleEditor PRIVATE ${MARISA_INCLUDE_DIRS})
-    target_link_libraries(StyleEditor ${MARISA_LIBRARIES})
-endif()
-
-if(APPLE)
+if(APPLE AND BUILD_FRAMEWORKS)
 	target_link_libraries(StyleEditor
 		OSMScout
         	OSMScoutMap
@@ -101,6 +96,11 @@ endif()
 
 if (Qt5Svg_FOUND)
 	target_link_libraries(StyleEditor Qt5::Svg)
+endif()
+
+if(MARISA_FOUND)
+    target_include_directories(StyleEditor PRIVATE ${MARISA_INCLUDE_DIRS})
+    target_link_libraries(StyleEditor ${MARISA_LIBRARIES})
 endif()
 
 # enable QML debuger

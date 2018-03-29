@@ -135,10 +135,11 @@ REM lippng needs two config headers pnglibconf.h and pngconf.h
 rem find a way for marisa debug lib without an new path
 SET MARISA_ROOT=%BUILDDIR%\marisa
 
-set CMAKE_INCLUDE_PATH=%BUILDDIR%\iconv\include;%BUILDDIR%\libxml2\include;%BUILDDIR%\protobuf\include;%BUILDDIR%\zlib\include
+set CMAKE_INCLUDE_PATH=%BUILDDIR%\iconv\include;%BUILDDIR%\libxml2\include;%BUILDDIR%\protobuf\include;%BUILDDIR%\zlib\include;%MARISA_ROOT%\include
 set CMAKE_LIBRARY_PATH=%BUILDDIR%\iconv\lib;%BUILDDIR%\libxml2\lib;%BUILDDIR%\protobuf\lib;%BUILDDIR%\zlib\lib;
 SET CMAKE_PROGRAM_PATH=%BUILDDIR%\protobuf\bin;%BUILDDIR%\libxml2\bin
 SET CMAKE_PREFIX_PATH=%QTDIR%/lib/cmake
+
 
 REM -DOSMSCOUT_BUILD_DEMOS=OFF because the new GPX Demos is not ebal to build with vs2015
 
@@ -185,7 +186,6 @@ xcopy /R /F /Y /E /S %BUILDDIR%\libxml2\bin\*.dll %BUILDDIR%\output\bin\
 xcopy /R /F /Y /E /S %BUILDDIR%\zlib\bin\*.dll %BUILDDIR%\output\bin\ 
 
 rem Todo
-rem mingwrt-5.2.0 to Output
 rem copy marisa h to output to Output
 rem build map data
 rem copy OSMScout2 to Output
@@ -193,3 +193,4 @@ rem doku how to start OSMScout2
 rem path to D:\Tools\Qt\5.9.2\msvc2015\bin
 rem set OSMSCOUT_LOG=DEBUG
 rem ..\build\output\bin\OSMScout2 D:\Mine\OpenSource\libosmscout-own\maps\hessen D:\Mine\OpenSource\libosmscout-own\stylesheets\standard.oss
+rem https://www.nuget.org/packages/cairo_static/1.15.4.1 try this to enable cairo painter

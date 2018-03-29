@@ -30,7 +30,7 @@ if(LIBXML2_FOUND)
 			)
 endif()
 
-if(APPLE)
+if(APPLE AND BUILD_FRAMEWORKS)
 set(THE_TARGET_NAME "OSMScoutGPX")
 else()
 set(THE_TARGET_NAME "osmscout_gpx")
@@ -67,12 +67,7 @@ if(LIBXML2_FOUND)
 	endif()
 endif()
 
-if (ICONV_FOUND)
-    target_include_directories(${THE_TARGET_NAME} PRIVATE ${ICONV_INCLUDE_DIRS})
-    target_link_libraries(${THE_TARGET_NAME} ${ICONV_LIBRARIES})
-endif()
-
-if(APPLE)
+if(APPLE AND BUILD_FRAMEWORKS)
   target_link_libraries(${THE_TARGET_NAME} OSMScout)
 else()
   target_link_libraries(${THE_TARGET_NAME} osmscout)
@@ -82,7 +77,7 @@ if(${IOS})
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fembed-bitcode")
 endif()
 
-if(APPLE)
+if(APPLE AND BUILD_FRAMEWORKS)
 set_target_properties(${THE_TARGET_NAME} PROPERTIES
   FRAMEWORK TRUE
   FRAMEWORK_VERSION C
