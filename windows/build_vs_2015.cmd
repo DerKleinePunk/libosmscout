@@ -2,7 +2,7 @@
 SETLOCAL ENABLEEXTENSIONS
 set LIBOSMBASEDIR=%~dp0
 set LIBOSMBASEDIR=%LIBOSMBASEDIR:windows\=%
-set QTDIR=F:/Tools/Qt/5.10.0/msvc2015
+set QTDIR=F:/Tools/Qt/5.11.1/msvc2015
 echo Attention no dirs with space are used Able !
 
 echo %LIBOSMBASEDIR%
