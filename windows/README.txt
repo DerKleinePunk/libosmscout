@@ -61,3 +61,7 @@ https://blog.nuget.org/20130426/native-support.html
 https://stackoverflow.com/questions/2166425/how-to-structure-a-c-application-to-use-a-multicore-processor
 http://www.bogotobogo.com/cplusplus/multithreaded4_cplusplus11.php
 https://katyscode.wordpress.com/2013/08/17/c11-multi-core-programming-ppl-parallel-aggregation-explained/
+
+### Cairo
+http://preshing.com/20170529/heres-a-standalone-cairo-dll-for-windows/
+https://github.com/preshing/cairo-windows/releases/download/1.15.10/cairo-windows-1.15.10.zip

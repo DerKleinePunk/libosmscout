@@ -56,6 +56,9 @@ IF %PLATFORM%==x64 (
 		wget http://xmlsoft.org/sources/win32/64bit/libxml2-2.9.3-win32-x86.7z -O libxml2-2.9.3-win32-x86.7z
 	)
 	
+	IF NOT EXIST "cairo-windows-1.15.10.zip" (
+		wget https://github.com/preshing/cairo-windows/releases/download/1.15.10/cairo-windows-1.15.10.zip -O cairo-windows-1.15.10.zip
+	)
 	echo Unpacking library dependencies...
 	
 	IF NOT EXIST "mingwrt-5.2.0" (
@@ -108,6 +111,10 @@ IF %PLATFORM%==x64 (
 		for /f "skip=19 tokens=4" %%A in (.\libxml2\lib\libxml.txt) do echo %%A >> .\libxml2\lib\libxml.def
 		lib /def:.\libxml2\lib\libxml.def /out:.\libxml2\lib\libxml2.lib /machine:x86
 	)
+	
+	IF NOT EXIST "cairo-windows-1.15.10" (
+	    7z x cairo-windows-1.15.10.zip >> build_cmd.log
+	)
 )
 
 title Building protobuf debug
@@ -135,8 +142,12 @@ REM lippng needs two config headers pnglibconf.h and pngconf.h
 rem find a way for marisa debug lib without an new path
 SET MARISA_ROOT=%BUILDDIR%\marisa
 
-set CMAKE_INCLUDE_PATH=%BUILDDIR%\iconv\include;%BUILDDIR%\libxml2\include;%BUILDDIR%\protobuf\include;%BUILDDIR%\zlib\include;%MARISA_ROOT%\include
-set CMAKE_LIBRARY_PATH=%BUILDDIR%\iconv\lib;%BUILDDIR%\libxml2\lib;%BUILDDIR%\protobuf\lib;%BUILDDIR%\zlib\lib;
+set CMAKE_INCLUDE_PATH=%BUILDDIR%\iconv\include;%BUILDDIR%\libxml2\include;%BUILDDIR%\protobuf\include;%BUILDDIR%\zlib\include;%MARISA_ROOT%\include;%BUILDDIR%\cairo-windows-1.15.10\include
+IF %PLATFORM%==x64 (
+   set CMAKE_LIBRARY_PATH=%BUILDDIR%\iconv\lib;%BUILDDIR%\libxml2\lib;%BUILDDIR%\protobuf\lib;%BUILDDIR%\zlib\lib;%BUILDDIR%\cairo-windows-1.15.10\lib\x64;
+) ELSE (
+   set CMAKE_LIBRARY_PATH=%BUILDDIR%\iconv\lib;%BUILDDIR%\libxml2\lib;%BUILDDIR%\protobuf\lib;%BUILDDIR%\zlib\lib;%BUILDDIR%\cairo-windows-1.15.10\lib\x86;
+)
 SET CMAKE_PROGRAM_PATH=%BUILDDIR%\protobuf\bin;%BUILDDIR%\libxml2\bin
 SET CMAKE_PREFIX_PATH=%QTDIR%/lib/cmake
 
