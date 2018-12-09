@@ -204,3 +204,5 @@ rem doku how to start OSMScout2
 rem path to D:\Tools\Qt\5.9.2\msvc2015\bin
 rem set OSMSCOUT_LOG=DEBUG
 rem ..\build\output\bin\OSMScout2 D:\Mine\OpenSource\libosmscout-own\maps\hessen D:\Mine\OpenSource\libosmscout-own\stylesheets\standard.oss
+rem ..\build\output\bin\OSMScout2 D:\Mine\OpenSource\libosmscout-own\maps\hessen D:\Mine\OpenSource\libosmscout-own\stylesheets\standard.oss
+rem https://www.nuget.org/packages/cairo_static/1.15.4.1 try this to enable cairo painter

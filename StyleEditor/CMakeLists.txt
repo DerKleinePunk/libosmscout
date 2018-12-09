@@ -106,6 +106,11 @@ else()
 	)
 endif()
 
+if(MARISA_FOUND)
+    target_include_directories(StyleEditor PRIVATE ${MARISA_INCLUDE_DIRS})
+    target_link_libraries(StyleEditor ${MARISA_LIBRARIES})
+endif()
+
 # enable QML debuger
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DQT_QML_DEBUG ")
 set_property(TARGET StyleEditor PROPERTY CXX_STANDARD 11)

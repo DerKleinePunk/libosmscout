@@ -20,3 +20,6 @@ build/
 # meson
 /debug/
 /release/
+
+#windows build
+windows/marisa

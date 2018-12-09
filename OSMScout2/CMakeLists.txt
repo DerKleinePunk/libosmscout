@@ -148,6 +148,11 @@ if (Qt5Positioning_FOUND)
 	target_link_libraries(OSMScout2 Qt5::Positioning)
 endif()
 
+if(MARISA_FOUND)
+    target_include_directories(OSMScout2 PRIVATE ${MARISA_INCLUDE_DIRS})
+    target_link_libraries(OSMScout2 ${MARISA_LIBRARIES})
+endif()
+
 # enable QML debuger
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DQT_QML_DEBUG")
 set_property(TARGET OSMScout2 PROPERTY CXX_STANDARD 11)
