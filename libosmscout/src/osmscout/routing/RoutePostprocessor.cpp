@@ -86,7 +86,7 @@ namespace osmscout {
     WayRef        way;
 
     Distance      distance;
-    double        time=0.0;
+    Duration      time(0);
 
     for (auto& node : description.Nodes()) {
       // The last node does not have a pathWayId set, since we are not going anywhere!
@@ -126,7 +126,7 @@ namespace osmscout {
           Distance deltaDistance=GetEllipsoidalDistance(prevCoord,
                                                         curCoord);
 
-          double deltaTime=0.0;
+          Duration deltaTime(0);
 
           if (node.GetPathObject().GetType()==refArea) {
             deltaTime=postprocessor.GetTime(node.GetDatabaseId(),
@@ -413,10 +413,10 @@ namespace osmscout {
         GeoCoord nextCoord=postprocessor.GetCoordinates(*nextNode,
                                                         nextNode->GetCurrentNodeIndex());
 
-        double inBearing=GetSphericalBearingFinal(prevCoord,coord)*180/M_PI;
-        double outBearing=GetSphericalBearingInitial(coord,nextCoord)*180/M_PI;
+        double inBearing=GetSphericalBearingFinal(prevCoord,coord).AsDegrees();
+        double outBearing=GetSphericalBearingInitial(coord,nextCoord).AsDegrees();
 
-        double turnAngle=NormalizeRelativeAngel(outBearing-inBearing);
+        double turnAngle= NormalizeRelativeAngle(outBearing - inBearing);
 
         double curveAngle=turnAngle;
 
@@ -452,10 +452,10 @@ namespace osmscout {
             GeoCoord lookupCoord=postprocessor.GetCoordinates(*lookup,
                                                               lookup->GetCurrentNodeIndex());
 
-            double lookupBearing=GetSphericalBearingInitial(curveBCoord,lookupCoord)*180/M_PI;
+            double lookupBearing=GetSphericalBearingInitial(curveBCoord,lookupCoord).AsDegrees();
 
 
-            double lookupAngle=NormalizeRelativeAngel(lookupBearing-currentBearing);
+            double lookupAngle= NormalizeRelativeAngle(lookupBearing - currentBearing);
 
             // The next node does not have enough direction change to be still part of a turn?
             if (fabs(lookupAngle)<curveMinAngle) {
@@ -468,7 +468,7 @@ namespace osmscout {
             }
 
             currentBearing=lookupBearing;
-            curveAngle=NormalizeRelativeAngel(currentBearing-inBearing);
+            curveAngle= NormalizeRelativeAngle(currentBearing - inBearing);
 
             curveB++;
             lookup++;
@@ -1605,14 +1605,14 @@ namespace osmscout {
     return entry->second;
   }
 
-  double RoutePostprocessor::GetTime(DatabaseId dbId,const Area& area,const Distance &deltaDistance) const
+  Duration RoutePostprocessor::GetTime(DatabaseId dbId,const Area& area,const Distance &deltaDistance) const
   {
     assert(dbId<profiles.size() && profiles[dbId]);
     auto profile=profiles[dbId];
     return profile->GetTime(area,deltaDistance);
   }
 
-  double RoutePostprocessor::GetTime(DatabaseId dbId,const Way& way,const Distance &deltaDistance) const
+  Duration RoutePostprocessor::GetTime(DatabaseId dbId,const Way& way,const Distance &deltaDistance) const
   {
     assert(dbId<profiles.size() && profiles[dbId]);
     auto profile=profiles[dbId];

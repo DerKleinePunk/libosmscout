@@ -27,7 +27,7 @@
 
 namespace osmscout {
 
-  const char* MergeAreaDataGenerator::AREAS_TMP="areas.tmp";
+  const char* const MergeAreaDataGenerator::AREAS_TMP="areas.tmp";
 
   void MergeAreaDataGenerator::GetDescription(const ImportParameter& /*parameter*/,
                                             ImportModuleDescription& description) const
@@ -49,9 +49,9 @@ namespace osmscout {
     FileWriter  writer;
 
     try {
-      uint32_t    wayDataCount=0;
-      uint32_t    relDataCount=0;
-      uint32_t    dataWritten=0;
+      uint32_t wayDataCount=0;
+      uint32_t relDataCount=0;
+      uint32_t dataWritten=0;
 
       writer.Open(AppendFileToDir(parameter.GetDestinationDirectory(),
                                   AREAS_TMP));

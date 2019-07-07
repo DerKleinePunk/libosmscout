@@ -196,17 +196,19 @@ namespace osmscout {
     TypeConfigRef GetTypeConfig() const;
 
     RoutingResult CalculateRouteViaCoords(RoutingProfile& profile,
-                                          std::vector<GeoCoord> via,
+                                          const std::vector<GeoCoord>& via,
                                           const Distance &radius,
                                           const RoutingParameter& parameter);
 
-    RoutePosition GetClosestRoutableNode(const GeoCoord& coord,
-                                         const RoutingProfile& profile,
-                                         const Distance &radius) const;
+    RoutePositionResult GetClosestRoutableNode(const GeoCoord& coord,
+                                               const RoutingProfile& profile,
+                                               const Distance &radius) const;
 
     ClosestRoutableObjectResult GetClosestRoutableObject(const GeoCoord& location,
                                                          Vehicle vehicle,
                                                          const Distance &maxRadius);
+
+    std::map<DatabaseId, std::string> GetDatabaseMapping() const override;
 
     void DumpStatistics();
   };

@@ -441,7 +441,7 @@ namespace osmscout {
     }
 
 #if defined(HAVE_MMAP) || defined(_WIN32)
-    if (this->buffer!=NULL) {
+    if (this->buffer!=nullptr) {
       if (offset+(FileOffset)bytes-1>=size) {
         hasError=true;
         throw IOException(filename,"Cannot read byte array","Cannot read beyond end of file");
@@ -552,6 +552,8 @@ namespace osmscout {
       throw IOException(filename,"Cannot read bool","File already in error state");
     }
 
+    char value;
+
 #if defined(HAVE_MMAP) || defined(_WIN32)
     if (buffer!=nullptr) {
       if (offset>=size) {
@@ -559,7 +561,8 @@ namespace osmscout {
         throw IOException(filename,"Cannot read bool","Cannot read beyond end of file");
       }
 
-      boolean=buffer[offset]!=0;
+      value=buffer[offset];
+      boolean=ConvertBool(value);
 
       offset++;
 
@@ -567,15 +570,13 @@ namespace osmscout {
     }
 #endif
 
-    char value;
-
     hasError=fread(&value,1,1,file)!=1;
 
     if (hasError) {
       throw IOException(filename,"Cannot read bool");
     }
 
-    boolean=value!=0;
+    boolean=ConvertBool(value);
   }
 
   void FileScanner::Read(int8_t& number)
@@ -1718,7 +1719,7 @@ namespace osmscout {
 
     // negative form
     if ((buffer & 0x01)!=0) {
-      char val=(buffer & 0x7e) >> 1;
+      int16_t val=(buffer & 0x7e) >> 1;
 
       number=-1;
       nextShift=6;
@@ -1739,7 +1740,7 @@ namespace osmscout {
       number^=static_cast<num_t>(val) << shift;
     }
     else {
-      char val=(buffer & 0x7e) >> 1;
+      int16_t val=(buffer & 0x7e) >> 1;
 
       number=0;
       nextShift=6;
@@ -1799,7 +1800,7 @@ namespace osmscout {
 
     // negative form
     if ((buffer & 0x01)!=0) {
-      char val=(buffer & 0x7e) >> 1;
+      int32_t val=(buffer & 0x7e) >> 1;
 
       number=-1;
       nextShift=6;
@@ -1820,7 +1821,7 @@ namespace osmscout {
       number^=static_cast<num_t>(val) << shift;
     }
     else {
-      char val=(buffer & 0x7e) >> 1;
+      int32_t val=(buffer & 0x7e) >> 1;
 
       number=0;
       nextShift=6;
@@ -1879,7 +1880,7 @@ namespace osmscout {
 
     // negative form
     if ((buffer & 0x01)!=0) {
-      char val=(buffer & 0x7e) >> 1;
+      int64_t val=(buffer & 0x7e) >> 1;
 
       number=-1;
       nextShift=6;
@@ -1900,7 +1901,7 @@ namespace osmscout {
       number^=static_cast<num_t>(val) << shift;
     }
     else {
-      char val=(buffer & 0x7e) >> 1;
+      int64_t val=(buffer & 0x7e) >> 1;
 
       number=0;
       nextShift=6;
@@ -2112,9 +2113,7 @@ namespace osmscout {
 
       offset+=coordByteSize;
 
-      coord.Set(latDat/latConversionFactor-90.0,
-                lonDat/lonConversionFactor-180.0);
-
+      SetCoord(latDat, lonDat, coord);
       return;
     }
 #endif
@@ -2137,8 +2136,7 @@ namespace osmscout {
            | (buffer[5] << 16)
            | ((buffer[6] & 0xf0) << 20);
 
-    coord.Set(latDat/latConversionFactor-90.0,
-              lonDat/lonConversionFactor-180.0);
+    SetCoord(latDat, lonDat, coord);
   }
 
   void FileScanner::ReadConditionalCoord(GeoCoord& coord,
@@ -2178,8 +2176,7 @@ namespace osmscout {
         isSet=false;
       }
       else  {
-        coord.Set(latDat/latConversionFactor-90.0,
-                  lonDat/lonConversionFactor-180.0);
+        SetCoord(latDat, lonDat, coord);
         isSet=true;
       }
 
@@ -2210,8 +2207,7 @@ namespace osmscout {
       isSet=false;
     }
     else  {
-      coord.Set(latDat/latConversionFactor-90.0,
-                lonDat/lonConversionFactor-180.0);
+      SetCoord(latDat, lonDat, coord);
       isSet=true;
     }
   }
@@ -2326,8 +2322,7 @@ namespace osmscout {
         latValue+=latDelta;
         lonValue+=lonDelta;
 
-        nodes[currentCoordPos].SetCoord(GeoCoord(latValue/latConversionFactor-90.0,
-                                                 lonValue/lonConversionFactor-180.0));
+        SetCoord(latValue,lonValue,nodes[currentCoordPos]);
 
         currentCoordPos++;
       }
@@ -2359,8 +2354,7 @@ namespace osmscout {
 
         lonValue+=lonDelta;
 
-        nodes[currentCoordPos].SetCoord(GeoCoord(latValue/latConversionFactor-90.0,
-                                                 lonValue/lonConversionFactor-180.0));
+        SetCoord(latValue,lonValue,nodes[currentCoordPos]);
 
         currentCoordPos++;
       }
@@ -2392,10 +2386,7 @@ namespace osmscout {
 
         lonValue+=lonDelta;
 
-        //setCoord(currentCoordPos, latValue, lonValue);
-        nodes[currentCoordPos].SetCoord(GeoCoord(latValue/latConversionFactor-90.0,
-                                                 lonValue/lonConversionFactor-180.0));
-
+        SetCoord(latValue,lonValue,nodes[currentCoordPos]);
 
         currentCoordPos++;
       }

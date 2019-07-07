@@ -36,7 +36,7 @@
 
 namespace osmscout {
 
-  const char* NodeDataGenerator::NODES_TMP="nodes.tmp";
+  const char* const NodeDataGenerator::NODES_TMP="nodes.tmp";
 
   void NodeDataGenerator::GetDescription(const ImportParameter& /*parameter*/,
                                          ImportModuleDescription& description) const
@@ -53,7 +53,6 @@ namespace osmscout {
                                  const ImportParameter& parameter,
                                  Progress& progress)
   {
-    uint32_t rawNodeCount=0;
     uint32_t nodesReadCount=0;
     uint32_t nodesWrittenCount=0;
 
@@ -70,6 +69,8 @@ namespace osmscout {
     FileWriter  writer;
 
     try {
+      uint32_t rawNodeCount=0;
+
       scanner.Open(AppendFileToDir(parameter.GetDestinationDirectory(),
                                    Preprocess::RAWNODES_DAT),
                    FileScanner::Sequential,

@@ -43,34 +43,60 @@ namespace osmscout {
   }
 
   /**
-   * Compare tile ids for equality
+   * Return the top left coordinate of the tile
+   * @param magnification
+   *    Magnification to complete the definition of the tile id (these are relative
+   *    to a magnification)
+   *
+   * @return
+   *    The resuting coordinate
    */
-  bool TileId::operator==(const TileId& other) const
+  GeoCoord TileId::GetTopLeftCoord(const Magnification& magnification) const
   {
-    return y==other.y &&
-           x==other.x;
+    uint32_t level=magnification.GetLevel();
+
+    return GeoCoord(y*cellDimension[level].height-90.0,
+                    x*cellDimension[level].width-180.0);
   }
 
   /**
-   * Compare tile ids for inequality
+   * Return the bounding box of the given tile
+   *
+   * @param magnification
+   *    Magnification to complete the definition of the tile id (these are relative
+   *    to a magnification)
+   *
+   * @return
+   *    The GeoBox defining the resulting area
    */
-  bool TileId::operator!=(const TileId& other) const
+  GeoBox TileId::GetBoundingBox(const MagnificationLevel& level) const
   {
-    return y!=other.y ||
-           x!=other.x;
+    auto& ourCellDimension=cellDimension[level.Get()];
+
+    return GeoBox(GeoCoord(y*ourCellDimension.height-90.0,
+                           x*ourCellDimension.width-180.0),
+                  GeoCoord((y+1)*ourCellDimension.height-90.0,
+                           (x+1)*ourCellDimension.width-180.0));
   }
 
   /**
-   * Compare tile ids by their order. Needed for sorting tile ids and placing them into (some)
-   * containers.
+   * Return the bounding box of the given tile
+   *
+   * @param magnification
+   *    Magnification to complete the definition of the tile id (these are relative
+   *    to a magnification)
+   *
+   * @return
+   *    The GeoBox defining the resulting area
    */
-  bool TileId::operator<(const TileId& other) const
+  GeoBox TileId::GetBoundingBox(const Magnification& magnification) const
   {
-    if (y!=other.y) {
-      return y<other.y;
-    }
+    auto& ourCellDimension=cellDimension[magnification.GetLevel()];
 
-    return x<other.x;
+    return GeoBox(GeoCoord(y*ourCellDimension.height-90.0,
+                           x*ourCellDimension.width-180.0),
+                  GeoCoord((y+1)*ourCellDimension.height-90.0,
+                           (x+1)*ourCellDimension.width-180.0));
   }
 
   /**
@@ -102,7 +128,7 @@ namespace osmscout {
    * @return
    *    A tile id
    */
-  TileId TileId::GetTile(MagnificationLevel level,
+  TileId TileId::GetTile(const MagnificationLevel& level,
                          const GeoCoord& coord)
   {
     return {uint32_t((coord.GetLon()+180.0)/cellDimension[level.Get()].width),
@@ -148,8 +174,8 @@ namespace osmscout {
 
     zoomedOutMagnification.SetLevel(MagnificationLevel(level-1));
 
-    return TileKey(zoomedOutMagnification,
-                   TileId(id.GetX()/2,id.GetY()/2));
+    return {zoomedOutMagnification,
+            TileId(id.GetX()/2,id.GetY()/2)};
   }
 
   /**
@@ -203,7 +229,52 @@ namespace osmscout {
     TileKey minKey(magnification,minTile);
     TileKey maxPlusKey(magnification,TileId(maxTile.GetX()+1,maxTile.GetY()+1));
 
-    return GeoBox(minKey.GetBoundingBox().GetTopLeft(),
-                  maxPlusKey.GetBoundingBox().GetTopLeft());
+    // TileId{0,0} is south-west corner. X coordinate is incrementing to east, Y to the north
+    return GeoBox(minKey.GetBoundingBox().GetBottomLeft(),
+                  maxPlusKey.GetBoundingBox().GetBottomLeft());
+  }
+
+  TileIdBox TileIdBox::Include(const TileId& tileId) const
+  {
+    return {TileId(std::min(tileId.GetX(),
+                            minTile.GetX()),
+                   std::min(tileId.GetY(),
+                            minTile.GetY())),
+            TileId(std::max(tileId.GetX(),
+                            maxTile.GetX()),
+                   std::max(tileId.GetY(),
+                            maxTile.GetY()))};
+  }
+
+  TileIdBox TileIdBox::Include(const TileIdBox& other) const
+  {
+    return {TileId(std::min(other.minTile.GetX(),
+                            minTile.GetX()),
+                   std::min(other.minTile.GetY(),
+                            minTile.GetY())),
+            TileId(std::max(other.maxTile.GetX(),
+                            maxTile.GetX()),
+                   std::max(other.maxTile.GetY(),
+                            maxTile.GetY()))};
+  }
+
+  TileIdBox TileIdBox::Intersection(const TileIdBox& other) const
+  {
+    return {TileId(std::max(other.minTile.GetX(),
+                            minTile.GetX()),
+                   std::max(other.minTile.GetY(),
+                            minTile.GetY())),
+            TileId(std::min(other.maxTile.GetX(),
+                            maxTile.GetX()),
+                   std::min(other.maxTile.GetY(),
+                            maxTile.GetY()))};
+  }
+
+  bool TileIdBox::Intersects(const TileIdBox& other) const
+  {
+    return !(other.GetMaxX() < minTile.GetX() ||
+             other.GetMinX() > maxTile.GetX() ||
+             other.GetMaxY() < minTile.GetY() ||
+             other.GetMinY() > maxTile.GetY());
   }
 }

@@ -31,6 +31,7 @@
 #include <osmscout/util/Magnification.h>
 
 #include <osmscout/ClientQtImportExport.h>
+#include <osmscout/VehiclePosition.h>
 
 namespace osmscout {
 
@@ -86,7 +87,7 @@ public:
           moveTolerance(15)
   {
     timer.setSingleShot(true);
-    connect(&timer, SIGNAL(timeout()), this, SLOT(onTimeout()));
+    connect(&timer, &QTimer::timeout, this, &TapRecognizer::onTimeout);
   }
 
   virtual inline ~TapRecognizer()
@@ -250,6 +251,7 @@ public:
     virtual bool rotateBy(double angleChange);
     virtual bool touch(QTouchEvent *event);
     virtual bool currentPosition(bool locationValid, osmscout::GeoCoord currentPosition, double moveTolerance);
+    virtual bool vehiclePosition(VehiclePosition* /*vehiclePosition*/);
     virtual bool isLockedToPosition();
     virtual bool focusOutEvent(QFocusEvent *event);
 

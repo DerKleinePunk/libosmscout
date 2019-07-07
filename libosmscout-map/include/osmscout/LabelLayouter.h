@@ -30,9 +30,9 @@
 #include <osmscout/LabelPath.h>
 #include <osmscout/system/Math.h>
 
-//#define LABEL_LAYOUTER_DEBUG
+//#define DEBUG_LABEL_LAYOUTER
 
-#if defined(LABEL_LAYOUTER_DEBUG)
+#ifdef DEBUG_LABEL_LAYOUTER
 #include <iostream>
 #endif
 
@@ -89,6 +89,7 @@ namespace osmscout {
   public:
     size_t            priority{0}; //!< Priority of the entry
     std::string       text;        //!< The label text (type==Text|PathText)
+    double            height;
     PathTextStyleRef  style;
     double            contourLabelOffset;
     double            contourLabelSpace;
@@ -181,7 +182,7 @@ namespace osmscout {
     };
 
   public:
-    size_t                priority; //!< Priority of the entry (minimum of priority label elements)
+    size_t                priority{std::numeric_limits<size_t>::max()}; //!< Priority of the entry (minimum of priority label elements)
     // TODO: move priority from label to element
     std::vector<Element>  elements;
   };
@@ -190,6 +191,9 @@ namespace osmscout {
   class ContourLabel
   {
   public:
+#ifdef DEBUG_LABEL_LAYOUTER
+    std::string text;
+#endif
     size_t priority;
     std::vector<Glyph<NativeGlyph>> glyphs;
     osmscout::PathTextStyleRef style;    //!< Style for drawing
@@ -215,7 +219,7 @@ namespace osmscout {
     Mask &operator=(const Mask &m) = delete;
     Mask &operator=(Mask &&m) = delete;
 
-	OSMSCOUT_MAP_API void prepare(const IntRectangle &rect);
+    OSMSCOUT_MAP_API void prepare(const IntRectangle &rect);
 
     inline int64_t size() const
     { return d.size(); };
@@ -425,9 +429,20 @@ namespace osmscout {
               rectangle.width = std::ceil(element.labelData.iconWidth + 2*padding);
               rectangle.height = std::ceil(element.labelData.iconHeight + 2*padding);
               canvas = &iconCanvas;
+#ifdef DEBUG_LABEL_LAYOUTER
+              if (element.labelData.type==LabelData::Icon) {
+                std::cout << "Test icon " << element.labelData.iconStyle->GetIconName() <<
+                             " prio " << currentLabel->priority;
+              }else{
+                std::cout << "Test symbol " << element.labelData.iconStyle->GetSymbol()->GetName() <<
+                             " prio " << currentLabel->priority;
+              }
+#endif
             } else {
 #ifdef DEBUG_LABEL_LAYOUTER
-              std::cout << "Test label prio " << currentLabel->priority << ": " << element.labelData.text << std::endl;
+              std::cout << "Test " << (IsOverlay(element.labelData) ? "overlay " : "") <<
+                           "label prio " << currentLabel->priority << ": " <<
+                           element.labelData.text;
 #endif
 
               rectangle.width = std::ceil(element.label->width + 2*padding);
@@ -443,6 +458,12 @@ namespace osmscout {
               visibleElements.push_back(element);
               canvases[eli]=canvas;
             }
+#ifdef DEBUG_LABEL_LAYOUTER
+            std::cout << " -> " << (collision ? "skipped" : "added") << std::endl;
+            // p->DrawRectangle(rectangle.x, rectangle.y,
+            //                  rectangle.width, rectangle.height,
+            //                  collision ? Color(0.8, 0, 0, 0.8): Color(0, 0.8, 0, 0.8));
+#endif
           }
           LabelInstanceType instanceCopy;
           instanceCopy.priority = currentLabel->priority;
@@ -465,7 +486,7 @@ namespace osmscout {
           int glyphCnt=currentContourLabel->glyphs.size();
 
 #ifdef DEBUG_LABEL_LAYOUTER
-          std::cout << "Test contour label prio " << currentContourLabel->priority << std::endl;
+          std::cout << "Test contour label prio " << currentContourLabel->priority << ": " << currentContourLabel->text;
 #endif
 
           Mask m(rowSize);
@@ -489,6 +510,9 @@ namespace osmscout {
             }
             contourLabelInstances.push_back(*currentContourLabel);
           }
+#ifdef DEBUG_LABEL_LAYOUTER
+          std::cout << " -> " << (collision ? "skipped" : "added") << std::endl;
+#endif
           contourLabelIter++;
         }
       }
@@ -596,14 +620,13 @@ namespace osmscout {
                        double objectWidth = 10.0)
     {
       LabelInstanceType instance;
-      instance.priority = std::numeric_limits<size_t>::max();
 
       double offset=-1;
       for (const auto &d:data) {
         typename LabelInstance<NativeGlyph, NativeLabel>::Element element;
         element.labelData=d;
         if (d.type==LabelData::Type::Icon || d.type==LabelData::Type::Symbol){
-          // TODO: icons and symbols don't support priority now
+          instance.priority = std::min(d.priority, instance.priority);
           element.x = point.GetX() - d.iconWidth / 2;
           if (offset<0){
             element.y = point.GetY() - d.iconHeight / 2;
@@ -646,7 +669,7 @@ namespace osmscout {
           projection,
           parameter,
           labelData.text,
-          labelData.style->GetSize(),
+          labelData.height,
           /* object width */ 0.0,
           /*enable wrapping*/ false,
           /*contour label*/ true);
@@ -659,18 +682,26 @@ namespace osmscout {
 
       double pLength=labelPath.GetLength();
       double offset=labelData.contourLabelOffset;
+
       while (offset+label->width < pLength){
+        double labelSpaceCount=size_t(label->width/labelData.contourLabelSpace)+1;
+
+        double nextOffset = offset+labelSpaceCount*labelData.contourLabelSpace;
 
         // skip string rendering when path is too much squiggly at this offset
         if (!labelPath.TestAngleVariance(offset,offset+label->width,M_PI_4)){
           // skip drawing current label and let offset point to the next instance
-          offset+=label->width + labelData.contourLabelSpace;
+          offset=nextOffset;
           continue;
         }
 
         ContourLabelType cLabel;
         cLabel.priority = labelData.priority;
         cLabel.style = labelData.style;
+
+#if defined(DEBUG_LABEL_LAYOUTER)
+        cLabel.text = labelData.text;
+#endif
 
         // do the magic to make sure that we don't render label upside-down
 
@@ -693,7 +724,7 @@ namespace osmscout {
           double angle=labelPath.AngleAtLength(upwards ? glyphOffset - w/2 : glyphOffset + w/2)*-1;
 
           // it is not real diagonal, but maximum distance from glyph
-          // point that can be covered after treansformantions
+          // point that can be covered after transformations
           double diagonal=w+h+std::abs(textBaselineOffset);
 
           // fast check if current glyph can be visible
@@ -750,7 +781,8 @@ namespace osmscout {
         if (!cLabel.glyphs.empty()) { // is some glyph visible?
           contourLabelInstances.push_back(cLabel);
         }
-        offset+=label->width + labelData.contourLabelSpace;
+
+        offset=nextOffset;
       }
     }
 

@@ -118,6 +118,7 @@ GRADES
     "sett"
     "tarred"
     "tartan"
+    "iron"
   }
 
   SURFACE GRADE 2 {
@@ -127,13 +128,13 @@ GRADES
     "compacted_gravel"
     "fine_gravel"
     "gravel"
-    "gravel;grass"
     "grass_paver"
     "metal"
     "pebblestone"
     "stone"
     "wood"
     "marble"
+    "panel"
   }
 
   SURFACE GRADE 3 {
@@ -142,7 +143,6 @@ GRADES
     "dirt/sand"
     "earth"
     "grass"
-    "grass;earth"
     "ground"
     "mud"
     "sand"
@@ -153,6 +153,9 @@ GRADES
   SURFACE GRADE 4 {
     "artificial_turf"
     "bark_mulch"
+    "stones"
+    "rock"
+    "rocks"
   }
 
 FEATURES
@@ -402,7 +405,7 @@ TYPES
       {Name, NameAlt}
 
   TYPE highway_bus_stop
-    = NODE ("highway"=="bus_stop" OR (!("bus" IN ["no", "false", "0"]) AND "public_transport"=="platform"))
+    = NODE ("highway"=="bus_stop" OR (!("bus" IN ["no", "false", "0"]) AND ("public_transport" IN ["platform", "stop_position"])))
       {Name, NameAlt}
 
   TYPE highway_turning_cycle
@@ -555,7 +558,7 @@ TYPES
       {Name, NameAlt}
 
   TYPE railway_tram_stop
-    = NODE ("railway"=="tram_stop")
+    = NODE ("railway"=="tram_stop" OR (("tram" IN ["yes", "true", "1"]) AND ("public_transport" IN ["platform", "stop_position"])))
       {Name, NameAlt}
 
   TYPE railway_crossing
@@ -905,7 +908,7 @@ TYPES
       {Name, NameAlt}
 
   TYPE natural_tree
-    IGNORE // Too many for mobile?
+    //IGNORE // Too many for mobile?
     = NODE ("natural"=="tree")
 
   TYPE natural_volcano
@@ -1018,6 +1021,11 @@ TYPES
       {Name, NameAlt}
       MERGE_AREAS
 
+  TYPE boundary_protected_area
+    = AREA RELATION ("boundary"=="national_park" OR "boundary"=="protected_area")
+      {Name, NameAlt}
+      OPTIMIZE_LOW_ZOOM MERGE_AREAS
+
   TYPE leisure_park
     = NODE AREA ("leisure"=="park")
       {Name, NameAlt}
@@ -1102,7 +1110,6 @@ TYPES
       GROUP amenity, routingPOI
 
   TYPE amenity_charging_station
-    IGNORE // No visualisation yet
     = NODE ("amenity"=="charging_station")
       GROUP amenity
 
@@ -1112,7 +1119,6 @@ TYPES
       GROUP amenity
 
   TYPE amenity_drinking_water
-    IGNORE // No visualisation yet
     = NODE ("amenity"=="drinking_water")
       GROUP amenity
 
@@ -1249,6 +1255,30 @@ TYPES
 
   TYPE amenity_restaurant
     = NODE AREA ("amenity"=="restaurant")
+      {Name, NameAlt}
+      ADDRESS POI
+      GROUP amenity, routingPOI
+
+  TYPE amenity_pub_building
+    = AREA ("amenity"=="pub" AND EXISTS "building" AND !("building" IN ["no","false","0"]))
+      {Name, NameAlt}
+      ADDRESS POI
+      GROUP amenity, building, routingPOI
+
+  TYPE amenity_pub
+    = NODE AREA ("amenity"=="pub")
+      {Name, NameAlt}
+      ADDRESS POI
+      GROUP amenity, routingPOI
+
+  TYPE amenity_bar_building
+    = AREA ("amenity"=="bar" AND EXISTS "building" AND !("building" IN ["no","false","0"]))
+      {Name, NameAlt}
+      ADDRESS POI
+      GROUP amenity, building, routingPOI
+
+  TYPE amenity_bar
+    = NODE AREA ("amenity"=="bar")
       {Name, NameAlt}
       ADDRESS POI
       GROUP amenity, routingPOI
@@ -2058,13 +2088,13 @@ TYPES
 
   TYPE barrier_wall
     = WAY AREA ("barrier"=="wall")
+      IGNORESEALAND
 
   TYPE barrier_ditch
     IGNORE
     = WAY AREA ("barrier"=="ditch")
 
   TYPE barrier_retaining_wall
-    IGNORE
     = WAY AREA ("barrier"=="retaining_wall")
       IGNORESEALAND
 
@@ -2220,9 +2250,6 @@ TYPES
 
   TYPE boundary_civil IGNORE
     = AREA ("boundary"=="civil")
-
-  TYPE boundary_national_park IGNORE
-    = WAY AREA RELATION ("boundary"=="national_park")
 
   TYPE boundary_maritime IGNORE
     = AREA RELATION ("boundary"=="maritime")

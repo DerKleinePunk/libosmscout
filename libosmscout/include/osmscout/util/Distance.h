@@ -26,6 +26,8 @@
 #include <utility>
 #include <limits>
 #include <algorithm>
+#include <string>
+#include <ostream>
 
 namespace osmscout {
 
@@ -125,6 +127,16 @@ namespace osmscout {
       return Distance(meters / factor);
     }
 
+    inline bool operator==(const Distance &d) const
+    {
+      return meters == d.meters;
+    }
+
+    inline bool operator!=(const Distance &d) const
+    {
+      return meters != d.meters;
+    }
+
     inline bool operator>(const Distance &d) const
     {
       return meters > d.meters;
@@ -151,9 +163,23 @@ namespace osmscout {
       return Unit::FromMeter(meters);
     }
 
+    std::string AsString() const;
+
+    static Distance Zero();
+
     static Distance Max();
 
+    /**
+     * returns the smallest finite value of the given type
+     * @return
+     */
     static Distance Min();
+
+    /**
+     * returns the lowest finite value of the given type
+     * @return
+     */
+    static Distance Lowest();
 
     static Distance Max(const Distance &a, const Distance &b);
 
@@ -165,6 +191,22 @@ namespace osmscout {
       return Distance(Unit::ToMeter(value));
     }
   };
+
+  inline std::ostream& operator<<(std::ostream& os,
+                                  const Distance& distance)
+  {
+    os << distance.AsString();
+
+    return os;
+  }
+
+  inline Distance Meters(double m){
+    return Distance::Of<Meter>(m);
+  }
+
+  inline Distance Kilometers(double km){
+    return Distance::Of<Kilometer>(km);
+  }
 
 }
 

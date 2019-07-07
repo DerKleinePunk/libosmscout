@@ -27,11 +27,11 @@ LookupModule::LookupModule(QThread *thread,DBThreadRef dbThread):
   QObject(),
   thread(thread),
   dbThread(dbThread),
-  loadJob(NULL)
+  loadJob(nullptr)
 {
 
-  connect(dbThread.get(), SIGNAL(initialisationFinished(const DatabaseLoadedResponse&)),
-          this, SIGNAL(initialisationFinished(const DatabaseLoadedResponse&)));
+  connect(dbThread.get(), &DBThread::initialisationFinished,
+          this, &LookupModule::initialisationFinished);
 }
 
 LookupModule::~LookupModule()
@@ -39,21 +39,20 @@ LookupModule::~LookupModule()
   if (thread!=QThread::currentThread()){
     qWarning() << "Destroy" << this << "from non incorrect thread;" << thread << "!=" << QThread::currentThread();
   }
-  if (thread!=NULL){
+  if (thread!=nullptr){
     thread->quit();
   }
 }
 
-void LookupModule::requestObjectsOnView(const MapViewStruct &view)
+void LookupModule::requestObjectsOnView(const MapViewStruct &view,
+                                        const QRectF &filterRectangle)
 {
-  double mapDpi=dbThread->GetMapDpi();
-
   // setup projection for data lookup
   osmscout::MercatorProjection lookupProjection;
-  lookupProjection.Set(view.coord,  0, view.magnification, mapDpi, view.width*1.5, view.height*1.5);
+  lookupProjection.Set(view.coord,  0, view.magnification, view.dpi, view.width*1.5, view.height*1.5);
   lookupProjection.SetLinearInterpolationUsage(view.magnification.GetLevel() >= 10);
 
-  if (loadJob!=NULL){
+  if (loadJob!=nullptr){
     delete loadJob;
   }
 
@@ -64,18 +63,78 @@ void LookupModule::requestObjectsOnView(const MapViewStruct &view)
 
   loadJob=new DBLoadJob(lookupProjection,maximumAreaLevel,/* lowZoomOptimization */ true);
   this->view=view;
+  this->filterRectangle=filterRectangle;
 
-  connect(loadJob, SIGNAL(databaseLoaded(QString,QList<osmscout::TileRef>)),
-          this, SLOT(onDatabaseLoaded(QString,QList<osmscout::TileRef>)));
-  connect(loadJob, SIGNAL(finished(QMap<QString,QMap<osmscout::TileId,osmscout::TileRef>>)),
-          this, SLOT(onLoadJobFinished(QMap<QString,QMap<osmscout::TileId,osmscout::TileRef>>)));
+  connect(loadJob, &DBLoadJob::databaseLoaded,
+          this, &LookupModule::onDatabaseLoaded);
+  connect(loadJob, &DBLoadJob::finished,
+          this, &LookupModule::onLoadJobFinished);
 
   dbThread->RunJob(loadJob);
 }
 
-void LookupModule::requestObjects(const LocationEntry &entry)
+void LookupModule::addObjectInfo(QList<ObjectInfo> &objectList, // output
+                                 const NodeRef &n,
+                                 const std::map<ObjectFileRef,LocationDescriptionService::ReverseLookupResult> &reverseLookupMap,
+                                 LocationServiceRef &locationService,
+                                 std::map<osmscout::FileOffset,osmscout::AdminRegionRef> &regionMap)
 {
-  osmscout::MapData mapData;
+  std::vector<osmscout::Point> nodes;
+  nodes.emplace_back(0, n->GetCoords());
+  addObjectInfo(objectList,
+                "node",
+                n->GetObjectFileRef(),
+                nodes,
+                n->GetCoords(),
+                n,
+                reverseLookupMap,
+                locationService,
+                regionMap);
+}
+
+void LookupModule::addObjectInfo(QList<ObjectInfo> &objectList, // output
+                                 const WayRef &w,
+                   const std::map<ObjectFileRef,LocationDescriptionService::ReverseLookupResult> &reverseLookupMap,
+                   LocationServiceRef &locationService,
+                   std::map<osmscout::FileOffset,osmscout::AdminRegionRef> &regionMap)
+{
+  addObjectInfo(objectList,
+                "way",
+                w->GetObjectFileRef(),
+                w->nodes,
+                w->GetBoundingBox().GetCenter(),
+                w,
+                reverseLookupMap,
+                locationService,
+                regionMap);
+}
+
+void LookupModule::addObjectInfo(QList<ObjectInfo> &objectList, // output
+                                 const AreaRef &a,
+                   const std::map<ObjectFileRef,LocationDescriptionService::ReverseLookupResult> &reverseLookupMap,
+                   LocationServiceRef &locationService,
+                   std::map<osmscout::FileOffset,osmscout::AdminRegionRef> &regionMap)
+{
+  for (const auto &ring:a->rings) {
+    if (!ring.GetType()->GetIgnore()) {
+      addObjectInfo(objectList,
+                    "area",
+                    a->GetObjectFileRef(),
+                    ring.nodes,
+                    // Master ring don't contains nodes! Use intersection of all outer rings instead
+                    (ring.nodes.empty() ? a->GetBoundingBox() : ring.GetBoundingBox()).GetCenter(),
+                    &ring,
+                    reverseLookupMap,
+                    locationService,
+                    regionMap);
+    }
+  }
+}
+
+
+void LookupModule::requestObjects(const LocationEntry &entry, bool reverseLookupAddresses)
+{
+  QList<ObjectInfo> objectList;
 
   dbThread->RunSynchronousJob(
     [&](const std::list<DBInstanceRef> &databases){
@@ -106,27 +165,107 @@ void LookupModule::requestObjects(const LocationEntry &entry)
                    << areaOffsets.size() << wayOffsets.size() << nodeOffsets.size()
                    << "(areas, ways, nodes) in database" << entry.getDatabase();
 
+          MapData mapData;
+
           db->database->GetAreasByOffset(areaOffsets, mapData.areas);
           db->database->GetWaysByOffset(wayOffsets, mapData.ways);
           db->database->GetNodesByOffset(nodeOffsets, mapData.nodes);
+
+          std::map<ObjectFileRef,LocationDescriptionService::ReverseLookupResult> reverseLookupMap;
+          std::map<osmscout::FileOffset,osmscout::AdminRegionRef> regionMap;
+          if (reverseLookupAddresses) {
+            std::list<ObjectFileRef> objects;
+            objects.insert(objects.begin(), entry.getReferences().cbegin(), entry.getReferences().cend());
+            std::list<LocationDescriptionService::ReverseLookupResult> reverseLookupResult;
+            db->locationDescriptionService->ReverseLookupObjects(objects, reverseLookupResult);
+            for (const auto &res:reverseLookupResult){
+              reverseLookupMap[res.object]=res;
+            }
+          }
+
+          for (auto const &n:mapData.nodes){
+            addObjectInfo(objectList,n,reverseLookupMap,db->locationService,regionMap);
+          }
+
+          //std::cout << "ways:  " << d.ways.size() << std::endl;
+          for (auto const &w:mapData.ways){
+            addObjectInfo(objectList,w,reverseLookupMap,db->locationService,regionMap);
+          }
+
+          //std::cout << "areas: " << d.areas.size() << std::endl;
+          for (auto const &a:mapData.areas){
+            addObjectInfo(objectList,a,reverseLookupMap,db->locationService,regionMap);
+          }
         }
       }
     }
   );
+  objectList.size();
+  emit objectsLoaded(entry, objectList);
+}
 
-  emit objectsLoaded(entry, mapData);
+void LookupModule::filterObjectInView(const osmscout::MapData &mapData,
+                                      QList<ObjectInfo> &objectList)
+{
+  osmscout::MercatorProjection projection;
+  projection.Set(view.coord, /* angle */ 0, view.magnification, view.dpi, view.width, view.height);
+  projection.SetLinearInterpolationUsage(view.magnification.GetLevel() >= 10);
+
+  //std::cout << "object near " << this->screenX << " " << this->screenY << ":" << std::endl;
+
+  // TODO: add reverse lookup for objects on the view
+  std::map<ObjectFileRef,LocationDescriptionService::ReverseLookupResult> reverseLookupMap;
+  std::map<osmscout::FileOffset,osmscout::AdminRegionRef> regionMap;
+  LocationServiceRef locationService;
+
+  double x;
+  double y;
+  double x2;
+  double y2;
+
+  //std::cout << "nodes: " << d.nodes.size() << std::endl;
+  for (auto const &n:mapData.nodes){
+    projection.GeoToPixel(n->GetCoords(),x,y);
+    if (filterRectangle.contains(x,y)){
+      addObjectInfo(objectList,n,reverseLookupMap,locationService,regionMap);
+    }
+  }
+
+  //std::cout << "ways:  " << d.ways.size() << std::endl;
+  for (auto const &w:mapData.ways){
+    // TODO: better detection
+    osmscout::GeoBox bbox=w->GetBoundingBox();
+    projection.GeoToPixel(bbox.GetMinCoord(),x,y);
+    projection.GeoToPixel(bbox.GetMaxCoord(),x2,y2);
+    if (filterRectangle.intersects(QRectF(QPointF(x,y),QPointF(x2,y2)))){
+      addObjectInfo(objectList,w,reverseLookupMap,locationService,regionMap);
+    }
+  }
+
+  //std::cout << "areas: " << d.areas.size() << std::endl;
+  for (auto const &a:mapData.areas){
+    // TODO: better detection
+    osmscout::GeoBox bbox=a->GetBoundingBox();
+    projection.GeoToPixel(bbox.GetMinCoord(),x,y);
+    projection.GeoToPixel(bbox.GetMaxCoord(),x2,y2);
+    if (filterRectangle.intersects(QRectF(QPointF(x,y),QPointF(x2,y2)))){
+      addObjectInfo(objectList,a,reverseLookupMap,locationService,regionMap);
+    }
+  }
 }
 
 void LookupModule::onDatabaseLoaded(QString dbPath,QList<osmscout::TileRef> tiles)
 {
   osmscout::MapData data;
+  QList<ObjectInfo> objectList;
   loadJob->AddTileDataToMapData(dbPath,tiles,data);
-  emit viewObjectsLoaded(view, data);
+  filterObjectInView(data,objectList);
+  emit viewObjectsLoaded(view, objectList);
 }
 
-void LookupModule::onLoadJobFinished(QMap<QString,QMap<osmscout::TileId,osmscout::TileRef>> /*tiles*/)
+void LookupModule::onLoadJobFinished(QMap<QString,QMap<osmscout::TileKey,osmscout::TileRef>> /*tiles*/)
 {
-  emit viewObjectsLoaded(view, osmscout::MapData());
+  emit viewObjectsLoaded(view, QList<ObjectInfo>());
 }
 
 void LookupModule::requestLocationDescription(const osmscout::GeoCoord location)
@@ -197,8 +336,8 @@ AdminRegionInfoRef LookupModule::buildAdminRegionInfo(DBInstanceRef &db,
   osmscout::WayRef                way;
   osmscout::AreaRef               area;
 
-  osmscout::NameAltFeatureValue    *altNameValue=NULL;
-  osmscout::AdminLevelFeatureValue *adminLevelValue=NULL;
+  osmscout::NameAltFeatureValue    *altNameValue=nullptr;
+  osmscout::AdminLevelFeatureValue *adminLevelValue=nullptr;
 
   switch (region->object.GetType()){
     case osmscout::refNode:
@@ -228,9 +367,9 @@ AdminRegionInfoRef LookupModule::buildAdminRegionInfo(DBInstanceRef &db,
       break;
   }
 
-  if (altNameValue!=NULL)
+  if (altNameValue!=nullptr)
     info->altName=QString::fromStdString(altNameValue->GetNameAlt());
-  if (adminLevelValue!=NULL)
+  if (adminLevelValue!=nullptr)
     info->adminLevel=(int)adminLevelValue->GetAdminLevel();
 
   return info;
