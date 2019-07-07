@@ -45,7 +45,7 @@ namespace osmscout {
   /**
    * \ingroup tiledcache
    *
-   * Temlate for storing sets of data of the same type in a tile. Normally data will either be NodeRef, WayRef or AreaRef.
+   * Template for storing sets of data of the same type in a tile. Normally data will either be NodeRef, WayRef or AreaRef.
    */
   template<typename O>
   class OSMSCOUT_MAP_API TileData
@@ -142,6 +142,20 @@ namespace osmscout {
     }
 
     /**
+     * Add data to the tile and mark the tile as completed.
+     */
+    void AddData(const TypeInfoSet& types,
+                 const std::vector<O>& data)
+    {
+      std::lock_guard<std::mutex> guard(mutex);
+
+      this->data.insert(this->data.end(), data.begin(), data.end());
+      this->types.Add(types);
+
+      complete=true;
+    }
+
+    /**
      * Assign data to the tile and mark the tile as completed.
      */
     void SetData(const TypeInfoSet& types,
@@ -150,7 +164,7 @@ namespace osmscout {
       std::lock_guard<std::mutex> guard(mutex);
 
       this->data=data;
-      this->types.Add(types);
+      this->types=types;
 
       complete=true;
     }
@@ -164,7 +178,7 @@ namespace osmscout {
       std::lock_guard<std::mutex> guard(mutex);
 
       this->data=std::move(data);
-      this->types.Add(types);
+      this->types=types;
 
       complete=true;
     }
@@ -262,7 +276,7 @@ namespace osmscout {
     TileAreaData  optimizedAreaData; //!< Optimized area data
 
   private:
-    Tile(const TileKey& key);
+    explicit Tile(const TileKey& key);
 
   public:
     friend class DataTileCache;

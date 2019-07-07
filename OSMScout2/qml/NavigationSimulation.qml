@@ -52,10 +52,6 @@ Window {
                                             latitude, longitude,
                                             horizontalAccuracyValid, horizontalAccuracy);
             // console.log("position: " + latitude + " " + longitude);
-
-            if ((!navigationModel.positionOnRoute) && routingModel.ready){
-                reroute();
-            }
         }
     }
 
@@ -63,10 +59,13 @@ Window {
         id: navigationModel
         route: routingModel.route
 
-        onPositionOnRouteChanged: {
-            if (!positionOnRoute){
+        onRerouteRequest: {
+            if (routingModel.ready){
                 reroute();
             }
+        }
+        onPositionEstimate: {
+            console.log("onPositionEstimate " + lat + " " + lon);
         }
     }
 
@@ -79,7 +78,6 @@ Window {
             }
 
             map.addOverlayObject(0,routeWay);
-            //navigationModel.
         }
     }
 
@@ -87,6 +85,81 @@ Window {
         id: map
         anchors.fill: parent
         showCurrentPosition: true
+        vehiclePosition: navigationModel.vehiclePosition
+
+        focus: true
+
+        Keys.onPressed: {
+            if (event.key === Qt.Key_Plus) {
+                map.zoomIn(2.0)
+                event.accepted = true
+            }
+            else if (event.key === Qt.Key_Minus) {
+                map.zoomOut(2.0)
+                event.accepted = true
+            }
+            else if (event.key === Qt.Key_Up) {
+                map.up()
+                event.accepted = true
+            }
+            else if (event.key === Qt.Key_Down) {
+                map.down()
+                event.accepted = true
+            }
+            else if (event.key === Qt.Key_Left) {
+                if (event.modifiers & Qt.ShiftModifier) {
+                    map.rotateLeft();
+                }
+                else {
+                    map.left();
+                }
+                event.accepted = true
+            }
+            else if (event.key === Qt.Key_Right) {
+                if (event.modifiers & Qt.ShiftModifier) {
+                    map.rotateRight();
+                }
+                else {
+                    map.right();
+                }
+                event.accepted = true
+            }
+            else if (event.modifiers===Qt.ControlModifier &&
+                     event.key === Qt.Key_F) {
+                searchDialog.focus = true
+                event.accepted = true
+            }
+            else if (event.modifiers===Qt.ControlModifier &&
+                     event.key === Qt.Key_D) {
+                map.toggleDaylight();
+            }
+            else if (event.modifiers===Qt.ControlModifier &&
+                     event.key === Qt.Key_R) {
+                map.reloadStyle();
+            }
+            else if (event.modifiers===(Qt.ControlModifier | Qt.ShiftModifier) &&
+                     event.key === Qt.Key_D) {
+                var debugState = map.toggleDebug();
+
+                if (debugState) {
+                  console.log("DEBUG is ON");
+                }
+                else {
+                  console.log("DEBUG is OFF");
+                }
+            }
+            else if (event.modifiers===(Qt.ControlModifier | Qt.ShiftModifier) &&
+                     event.key === Qt.Key_I) {
+                var infoState = map.toggleInfo();
+
+                if (infoState) {
+                  console.log("INFO is ON");
+                }
+                else {
+                  console.log("INFO is OFF");
+                }
+            }
+        }
     }
     RowLayout {
         id: simulatorControl
@@ -150,8 +223,8 @@ Window {
         id: topContainer
         anchors.left: parent.left
         anchors.top: parent.top
-        width: Math.min(400, parent.width - rightContainer.width)
-        height: 120
+        width: Math.min(420, parent.width - rightContainer.width)
+        height: 130
         color: "transparent"
 
         Rectangle {
@@ -174,6 +247,31 @@ Window {
                     top: parent.top
                     left: parent.left
                 }
+                Text{
+                    id: roundaboutExit
+                    text: navigationModel.nextRouteStep.type == "leave-roundabout" ? navigationModel.nextRouteStep.roundaboutExit : ""
+                    anchors.centerIn: parent
+                    font.pixelSize: Theme.textFontSize*2
+                }
+            }
+            Rectangle {
+                anchors{
+                    top: parent.top
+                    right: parent.right
+                }
+                width: currentSpeedText.width+(2*Theme.horizSpace)
+                height: currentSpeedText.height+(2*Theme.vertSpace)
+                color: (navigationModel.currentSpeed > 0 &&
+                        navigationModel.maxAllowedSpeed > 0 &&
+                        navigationModel.currentSpeed > navigationModel.maxAllowedSpeed) ?
+                           "red":"transparent"
+
+                Text{
+                    id: currentSpeedText
+                    anchors.centerIn: parent
+                    text: navigationModel.currentSpeed < 0 ? "--" : (Math.round(navigationModel.currentSpeed)+" km/h")
+                    font.pixelSize: Theme.textFontSize
+                }
             }
             Text{
                 id: distanceToNextStep
@@ -195,12 +293,26 @@ Window {
                 }
             }
             Text{
+                id: nextStepStreets
+                text: "via " + navigationModel.nextRouteStep.streetNames.join(", ")
+                font.pixelSize: Theme.textFontSize
+                opacity: 0.7
+                visible: navigationModel.nextRouteStep.streetNames.length > 0
+                wrapMode: Text.NoWrap
+                clip: true
+                anchors{
+                    top: distanceToNextStep.bottom
+                    left: nextStepIcon.right
+                    right: parent.right
+                }
+            }
+            Text{
                 id: nextStepDescription
                 text: navigationModel.nextRouteStep.description
                 font.pixelSize: Theme.textFontSize
                 wrapMode: Text.Wrap
                 anchors{
-                    top: distanceToNextStep.bottom
+                    top: nextStepStreets.bottom
                     left: nextStepIcon.right
                     right: parent.right
                 }
@@ -230,7 +342,7 @@ Window {
             ListView {
                 id: routingView
 
-                model: routingModel
+                model: navigationModel
 
                 anchors.fill: parent
                 anchors.margins: 1

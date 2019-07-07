@@ -252,23 +252,35 @@ namespace osmscout {
       return GetWidth()*GetHeight();
     }
 
+    /**
+     * south-west corner
+     */
     inline GeoCoord GetBottomLeft() const
     {
       return minCoord;
     }
 
+    /**
+     * south-east corner
+     */
     inline GeoCoord GetBottomRight() const
     {
       return GeoCoord(minCoord.GetLat(),
                       maxCoord.GetLon());
     }
 
+    /**
+     * north-west corner
+     */
     inline GeoCoord GetTopLeft() const
     {
       return GeoCoord(maxCoord.GetLat(),
                       minCoord.GetLon());
     }
 
+    /**
+     * north-east corner
+     */
     inline GeoCoord GetTopRight() const
     {
       return maxCoord;
@@ -278,6 +290,18 @@ namespace osmscout {
      * Return a string representation of the coordinate value in a human readable format.
      */
     std::string GetDisplayText() const;
+
+    /**
+     * Assign the value of other
+     */
+    inline GeoBox& operator=(const GeoBox& other)
+    {
+      this->minCoord=other.minCoord;
+      this->maxCoord=other.maxCoord;
+      this->valid=other.valid;
+
+      return *this;
+    }
 
     /**
      * Return an GeoBox based on the center and the radius [meters] of a circle around the center.

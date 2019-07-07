@@ -251,7 +251,7 @@ if(OSMSCOUT_BUILD_MAP_QT)
   add_subdirectory(libosmscout-map-qt)
 endif()
 
-if(Qt5Gui_FOUND AND OSMSCOUT_BUILD_MAP_QT)
+if(Qt5Core_FOUND AND Qt5Gui_FOUND AND Qt5Quick_FOUND AND OSMSCOUT_BUILD_MAP_QT)
   set(OSMSCOUT_BUILD_CLIENT_QT_CACHE ON)
 else()
   set(OSMSCOUT_BUILD_CLIENT_QT_CACHE OFF)
@@ -365,6 +365,7 @@ endif()
 option(OSMSCOUT_BUILD_BINDING_CSHARP "Enable generation of c# binding" ${OSMSCOUT_BUILD_BINDING_CSHARP_CACHE})
 
 add_subdirectory(libosmscout-binding)
+add_subdirectory(libosmscout-map-binding)
 
 if(MATLAB_FOUND)
   set(OSMSCOUT_BUILD_EXTERN_MATLAB_CACHE ON)

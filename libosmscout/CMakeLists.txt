@@ -14,6 +14,7 @@ set(HEADER_FILES_SYSTEM
 
 set(HEADER_FILES_UTIL
     include/osmscout/util/Base64.h
+    include/osmscout/util/Bearing.h
     include/osmscout/util/Breaker.h
     include/osmscout/util/Cache.h
     include/osmscout/util/Color.h
@@ -40,6 +41,7 @@ set(HEADER_FILES_UTIL
     include/osmscout/util/StringMatcher.h
     include/osmscout/util/TagErrorReporter.h
     include/osmscout/util/Tiling.h
+    include/osmscout/util/Time.h
     include/osmscout/util/TileId.h
     include/osmscout/util/Transformation.h
     include/osmscout/util/WorkQueue.h)
@@ -58,12 +60,20 @@ set(HEADER_FILES_ROUTING
     include/osmscout/routing/MultiDBRoutingService.h
     include/osmscout/routing/DBFileOffset.h
     include/osmscout/routing/TurnRestriction.h
-    include/osmscout/routing/MultiDBRoutingState.h)
+    include/osmscout/routing/MultiDBRoutingState.h
+    include/osmscout/routing/RouteDescriptionPostprocessor.h)
 
 set(HEADER_FILES_NAVIGATION
     include/osmscout/navigation/Agents.h
+    include/osmscout/navigation/ArrivalEstimateAgent.h
+    include/osmscout/navigation/DataAgent.h
+    include/osmscout/navigation/PositionAgent.h
+    include/osmscout/navigation/RouteStateAgent.h
     include/osmscout/navigation/Engine.h
-    include/osmscout/navigation/Navigation.h)
+    include/osmscout/navigation/Navigation.h
+    include/osmscout/navigation/BearingAgent.h
+    include/osmscout/navigation/RouteInstructionAgent.h
+    include/osmscout/navigation/SpeedAgent.h)
 
 set(HEADER_FILES
     ${HEADER_FILES_OST}
@@ -77,13 +87,13 @@ set(HEADER_FILES
     include/osmscout/AreaDataFile.h
     include/osmscout/AreaNodeIndex.h
     include/osmscout/AreaWayIndex.h
-    include/osmscout/Coord.h
     include/osmscout/CoordDataFile.h
     include/osmscout/CoverageIndex.h
     include/osmscout/BoundingBoxDataFile.h
     include/osmscout/TypeDistributionDataFile.h
     include/osmscout/Database.h
     include/osmscout/DataFile.h
+    include/osmscout/ElevationService.h
     include/osmscout/BasemapDatabase.h
     include/osmscout/DebugDatabase.h
     include/osmscout/GeoCoord.h
@@ -120,6 +130,7 @@ set(SOURCE_FILES
     src/osmscout/ost/Parser.cpp
     src/osmscout/ost/Scanner.cpp
     src/osmscout/system/SSEMath.cpp
+    src/osmscout/util/Bearing.cpp
     src/osmscout/util/Breaker.cpp
     src/osmscout/util/Cache.cpp
     src/osmscout/util/Color.cpp
@@ -161,14 +172,21 @@ set(SOURCE_FILES
     src/osmscout/routing/MultiDBRoutingService.cpp
     src/osmscout/routing/TurnRestriction.cpp
     src/osmscout/routing/MultiDBRoutingState.cpp
+    src/osmscout/routing/RouteDescriptionPostprocessor.cpp
     src/osmscout/navigation/Agents.cpp
+    src/osmscout/navigation/ArrivalEstimateAgent.cpp
+    src/osmscout/navigation/BearingAgent.cpp
+    src/osmscout/navigation/DataAgent.cpp
+    src/osmscout/navigation/PositionAgent.cpp
+    src/osmscout/navigation/RouteStateAgent.cpp
+    src/osmscout/navigation/RouteInstructionAgent.cpp
+    src/osmscout/navigation/SpeedAgent.cpp
     src/osmscout/navigation/Engine.cpp
     src/osmscout/Area.cpp
     src/osmscout/AreaDataFile.cpp
     src/osmscout/AreaAreaIndex.cpp
     src/osmscout/AreaNodeIndex.cpp
     src/osmscout/AreaWayIndex.cpp
-    src/osmscout/Coord.cpp
     src/osmscout/CoordDataFile.cpp
     src/osmscout/CoverageIndex.cpp
     src/osmscout/BoundingBoxDataFile.cpp
@@ -219,7 +237,7 @@ else()
 endif()
 
 set_target_properties(OSMScout PROPERTIES
-    CXX_STANDARD 11
+    CXX_STANDARD 14
 	OUTPUT_NAME "osmscout")
 
 target_include_directories(OSMScout PUBLIC include ${CMAKE_SOURCE_DIR}/include)

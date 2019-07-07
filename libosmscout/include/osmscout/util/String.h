@@ -29,6 +29,7 @@
 #include <osmscout/CoreFeatures.h>
 
 #include <osmscout/system/Assert.h>
+#include <osmscout/util/Time.h>
 
 #include <osmscout/CoreImportExport.h>
 #include <osmscout/OSMScoutTypes.h>
@@ -301,13 +302,25 @@ namespace osmscout {
 
   /**
    * \ingroup Util
+   * Split string by separator. For arguments "asphalt;ground;gravel" and ";" return list of three...
+   *
+   * \note when stringList is empty, result is empty list
+   * \note separator must not be empty
+   * \note when string ends with separator, last (empty) element is omited
+   */
+  extern OSMSCOUT_API std::list<std::string> SplitString(const std::string& stringList,
+                                                         const std::string& separator);
+
+
+  /**
+   * \ingroup Util
    * Assumes that the string consists of a number of values separated by one of the given divider.
    * If the list consists of one entry, no divider is used.
    *
    * Returns the first entry in the list
    *
    * \note stringList must not be empty
-   * \note at least one devidier must be given
+   * \note at least one devider must be given
    */
   extern OSMSCOUT_API std::string GetFirstInStringList(const std::string& stringList,
                                                        const std::string& divider);
@@ -480,8 +493,6 @@ namespace osmscout {
    * @note that a global C++ locale must be set for more than simple ASCII conversions to work.
    */
   extern OSMSCOUT_API std::string UTF8NormForLookup(const std::string& text);
-
-  typedef std::chrono::system_clock::time_point Timestamp;
 
   /**
    * Parse time string in ISO 8601 format "2017-11-26T13:46:12.124Z" (UTC timezone)

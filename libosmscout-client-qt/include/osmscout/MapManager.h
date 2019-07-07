@@ -29,14 +29,12 @@
 #include <osmscout/ClientQtImportExport.h>
 
 #include <osmscout/MapProvider.h>
+#include <osmscout/Settings.h>
 #include <osmscout/AvailableMapsModel.h>
 #include <osmscout/FileDownloader.h>
 
 #include <QtGlobal>
-#if QT_VERSION >= 0x050400
-#define HAS_QSTORAGE
 #include <QStorageInfo>
-#endif
 
 namespace osmscout {
 
@@ -55,23 +53,26 @@ class OSMSCOUT_CLIENT_QT_API MapDownloadJob: public QObject
   AvailableMapsModelMap   map;
   QDir                    target;
   
-  bool                    done;
-  bool                    started;
+  bool                    done{false};
+  bool                    started{false};
+  bool                    successful{false};
+  bool                    canceledByUser{false};
 
-  uint64_t                downloadedBytes;
+  uint64_t                downloadedBytes{0};
 
   QString                 error;
 
   bool                    replaceExisting;
 
 signals:
-  void finished();
+  void finished(); // successfully
   void failed(QString error);
+  void canceled();
   void downloadProgress();
 
 public slots:
   void onJobFailed(QString errorMessage, bool recoverable);
-  void onJobFinished();
+  void onJobFinished(QString path);
   void downloadNextFile();
   void onDownloadProgress(uint64_t);
 
@@ -82,6 +83,8 @@ public:
   virtual ~MapDownloadJob();
   
   void start();
+
+  void cancel();
 
   inline QString getMapName() const
   {
@@ -106,6 +109,11 @@ public:
   inline bool isDone() const
   {
     return done;
+  }
+
+  inline bool isSuccessful() const
+  {
+    return successful;
   }
 
   inline bool isDownloading() const

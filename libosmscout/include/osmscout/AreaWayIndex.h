@@ -29,6 +29,7 @@
 #include <osmscout/TypeInfoSet.h>
 
 #include <osmscout/util/FileScanner.h>
+#include <osmscout/util/TileId.h>
 
 namespace osmscout {
 
@@ -42,31 +43,20 @@ namespace osmscout {
   class OSMSCOUT_API AreaWayIndex
   {
   public:
-    static const char* AREA_WAY_IDX;
+    static const char* const AREA_WAY_IDX;
 
   private:
     struct TypeData
     {
-      TypeInfoRef type;
-      uint32_t    indexLevel;
+      TypeInfoRef         type;
+      MagnificationLevel  indexLevel;
 
-      uint8_t     dataOffsetBytes;
-      FileOffset  bitmapOffset;
+      uint8_t             dataOffsetBytes;
+      FileOffset          bitmapOffset;
 
-      uint32_t    cellXStart;
-      uint32_t    cellXEnd;
-      uint32_t    cellYStart;
-      uint32_t    cellYEnd;
-      uint32_t    cellXCount;
-      uint32_t    cellYCount;
+      TileIdBox           tileBox;
 
-      double      cellWidth;
-      double      cellHeight;
-
-      double      minLon;
-      double      maxLon;
-      double      minLat;
-      double      maxLat;
+      GeoBox              boundingBox;
 
       TypeData();
 
@@ -83,7 +73,7 @@ namespace osmscout {
     mutable std::mutex    lookupMutex;
 
   private:
-    bool GetOffsets(const TypeData& typeData,
+    void GetOffsets(const TypeData& typeData,
                     const GeoBox& boundingBox,
                     std::unordered_set<FileOffset>& offsets) const;
 

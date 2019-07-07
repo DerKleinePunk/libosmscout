@@ -216,6 +216,10 @@ bool InputHandler::currentPosition(bool /*locationValid*/, osmscout::GeoCoord /*
 {
     return false;
 }
+bool InputHandler::vehiclePosition(VehiclePosition* /*vehiclePosition*/)
+{
+    return false;
+}
 bool InputHandler::isLockedToPosition()
 {
     return false;
@@ -227,7 +231,7 @@ bool InputHandler::focusOutEvent(QFocusEvent* /*event*/)
 
 MoveHandler::MoveHandler(MapView view): InputHandler(view)
 {
-    connect(&timer, SIGNAL(timeout()), this, SLOT(onTimeout()));
+    connect(&timer, &QTimer::timeout, this, &MoveHandler::onTimeout);
     timer.setSingleShot(false);
 }
 
@@ -444,7 +448,7 @@ bool MoveHandler::rotateBy(double angleChange)
 JumpHandler::JumpHandler(MapView view):
     InputHandler(view)
 {
-    connect(&timer, SIGNAL(timeout()), this, SLOT(onTimeout()));
+    connect(&timer, &QTimer::timeout, this, &JumpHandler::onTimeout);
     timer.setSingleShot(false);
 }
 

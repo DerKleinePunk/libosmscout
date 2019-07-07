@@ -32,7 +32,7 @@
 #include <iostream>
 namespace osmscout {
 
-  const char* AreaNodeIndex::AREA_NODE_IDX="areanode.idx";
+  const char* const AreaNodeIndex::AREA_NODE_IDX="areanode.idx";
 
   AreaNodeIndex::AreaNodeIndex()
   {
@@ -55,7 +55,7 @@ namespace osmscout {
   bool AreaNodeIndex::Open(const std::string& path,
                            bool memoryMappedData)
   {
-    datafilename=AppendFileToDir(path,AREA_NODE_IDX);
+    std::string datafilename=AppendFileToDir(path,AREA_NODE_IDX);
 
     try {
       scanner.Open(datafilename,
@@ -88,11 +88,13 @@ namespace osmscout {
         scanner.ReadCoord(minCoord);
         scanner.ReadCoord(maxCoord);
 
-        nodeTypeData[typeId].boundingBox.Set(minCoord,maxCoord);
+        TypeData& entry=nodeTypeData[typeId];
 
-        if (!nodeTypeData[typeId].isComplex) {
-          scanner.ReadFileOffset(nodeTypeData[typeId].indexOffset);
-          scanner.Read(nodeTypeData[typeId].entryCount);
+        entry.boundingBox.Set(minCoord,maxCoord);
+
+        if (!entry.isComplex) {
+          scanner.ReadFileOffset(entry.indexOffset);
+          scanner.Read(entry.entryCount);
         }
       }
 
@@ -163,6 +165,8 @@ namespace osmscout {
                                      const GeoBox& boundingBox,
                                      std::vector<FileOffset>& offsets) const
   {
+    std::lock_guard<std::mutex> guard(lookupMutex);
+
     scanner.SetPos(typeData.indexOffset);
 
     FileOffset previousOffset=0;
@@ -190,6 +194,8 @@ namespace osmscout {
                                          const GeoBox& boundingBox,
                                          std::vector<FileOffset>& offsets) const
   {
+    std::lock_guard<std::mutex> guard(lookupMutex);
+
     TileIdBox tileBox(TileId::GetTile(gridMag,boundingBox.GetMinCoord()),
                       TileId::GetTile(gridMag,boundingBox.GetMaxCoord()));
 

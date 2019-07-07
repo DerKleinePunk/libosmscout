@@ -25,6 +25,7 @@
 #include <osmscout/PersistentCookieJar.h>
 
 #include <osmscout/util/Logger.h>
+#include <osmscout/system/Compiler.h>
 #include <osmscout/DBThread.h>
 
 namespace osmscout {
@@ -36,7 +37,6 @@ MapDownloadJob::MapDownloadJob(QNetworkAccessManager *webCtrl,
                                QDir target,
                                bool replaceExisting):
   webCtrl(webCtrl), map(map), target(target),
-  done(false), started(false), downloadedBytes(0),
   replaceExisting(replaceExisting)
 {
 }
@@ -47,10 +47,45 @@ MapDownloadJob::~MapDownloadJob()
     delete job;
   }
   jobs.clear();
+
+  if (started && !successful){
+    // delete partial database
+    MapDirectory dir(target);
+    dir.deleteDatabase();
+  }
 }
 
 void MapDownloadJob::start()
 {
+  if (target.exists()){
+    MapDirectory mapDir(target);
+    if (mapDir.hasMetadata() &&
+        !mapDir.isValid() &&
+        mapDir.getPath() == map.getPath() &&
+        mapDir.getCreation() == map.getCreation()) {
+      // directory contains partial download
+      // (contains downloader metadata, but not all required files)
+      // TODO: continue partial download
+    }
+    qWarning() << "Directory already exists"<<target.canonicalPath()<<"!";
+    onJobFailed("Directory already exists", false);
+    return;
+  }
+
+  started = true;
+  if (!target.mkpath(target.path())) {
+    qWarning() << "Can't create directory" << target.canonicalPath() << "!";
+    onJobFailed("Can't create directory", false);
+    return;
+  }
+  
+  QStorageInfo storage=QStorageInfo(target);
+  if (storage.bytesAvailable() > 0 && (uint64_t)storage.bytesAvailable() < map.getSize()){
+    qWarning() << "Free space" << storage.bytesAvailable() << "bytes is less than map size (" << map.getSize() << ")!";
+    onJobFailed("Not enough space", false);
+    return;
+  }
+
   QJsonObject mapMetadata;
   mapMetadata["name"] = map.getName();
   mapMetadata["map"] = map.getPath().join("/");
@@ -63,7 +98,6 @@ void MapDownloadJob::start()
   metadataFile.write(doc.toJson());
   metadataFile.close();
   if (metadataFile.error() != QFile::FileError::NoError){
-    started = true;
     done = true;
     error = metadataFile.errorString();
     emit failed(metadataFile.errorString());
@@ -98,14 +132,22 @@ void MapDownloadJob::start()
 
   for (auto fileName:fileNames){
     auto job=new FileDownloader(webCtrl, map.getProvider().getUri()+"/"+map.getServerDirectory()+"/"+fileName, target.filePath(fileName));
-    connect(job, SIGNAL(finished(QString)), this, SLOT(onJobFinished()));
-    connect(job, SIGNAL(error(QString, bool)), this, SLOT(onJobFailed(QString, bool)));
-    connect(job, SIGNAL(writtenBytes(uint64_t)), this, SIGNAL(downloadProgress()));
-    connect(job, SIGNAL(writtenBytes(uint64_t)), this, SLOT(onDownloadProgress(uint64_t)));
+    connect(job, &FileDownloader::finished, this, &MapDownloadJob::onJobFinished);
+    connect(job, &FileDownloader::error, this, &MapDownloadJob::onJobFailed);
+    connect(job, &FileDownloader::writtenBytes, this, &MapDownloadJob::downloadProgress);
+    connect(job, &FileDownloader::writtenBytes, this, &MapDownloadJob::onDownloadProgress);
     jobs << job;
   }
   started=true;
   downloadNextFile();
+}
+
+void MapDownloadJob::cancel()
+{
+  if (!done){
+    canceledByUser=true;
+    onJobFailed("Canceled by user", false);
+  }
 }
 
 void MapDownloadJob::onDownloadProgress(uint64_t)
@@ -125,16 +167,23 @@ void MapDownloadJob::onJobFailed(QString errorMessage, bool recoverable){
   }else{
     done = true;
     error = errorMessage;
-    emit failed(errorMessage);
+    if (canceledByUser) {
+      emit canceled();
+    }else{
+      emit failed(errorMessage);
+    }
   }
 }
 
-void MapDownloadJob::onJobFinished()
+void MapDownloadJob::onJobFinished(QString path)
 {
   if (!jobs.isEmpty()) {
-    jobs.first()->deleteLater();
-    downloadedBytes += jobs.first()->getBytesDownloaded();
+    FileDownloader* job = jobs.first();
     jobs.pop_front();
+    assert(job->getFilePath()==path);
+    unused(path);
+    downloadedBytes += job->getBytesDownloaded();
+    job->deleteLater();
   }
   
   downloadNextFile();
@@ -147,6 +196,7 @@ void MapDownloadJob::downloadNextFile()
     emit downloadProgress();
   } else {
     done = true;
+    successful = true;
     emit finished();
   }
 }
@@ -260,7 +310,13 @@ bool MapDirectory::deleteDatabase()
   }
   QDir parent=dir;
   parent.cdUp();
-  return result && parent.rmdir(dir.dirName());
+  result&=parent.rmdir(dir.dirName());
+  if (result){
+    qDebug() << "Removed database" << dir.path();
+  }else{
+    qWarning() << "Failed to remove database directory completely" << dir.path();
+  }
+  return result;
 }
 
 MapManager::MapManager(QStringList databaseLookupDirs, SettingsRef settings):
@@ -309,36 +365,10 @@ MapManager::~MapManager(){
 
 void MapManager::downloadMap(AvailableMapsModelMap map, QDir dir, bool replaceExisting)
 {
-  if (dir.exists()){
-    MapDirectory mapDir(dir);
-    if (mapDir.hasMetadata() &&
-        !mapDir.isValid() &&
-        mapDir.getPath() == map.getPath() &&
-        mapDir.getCreation() == map.getCreation()) {
-      // directory contains partial download
-      // (contains downloader metadata, but not all required files)
-      // TODO: continue partial download
-    }
-    qWarning() << "Directory already exists"<<dir.canonicalPath()<<"!";
-    emit mapDownloadFails("Directory already exists");
-    return;
-  } else {
-    if (!dir.mkpath(dir.path())) {
-      qWarning() << "Can't create directory" << dir.canonicalPath() << "!";
-      emit mapDownloadFails("Can't create directory");
-      return;
-    }
-  }
-#ifdef HAS_QSTORAGE
-  QStorageInfo storage=QStorageInfo(dir);
-  if (storage.bytesAvailable()<(double)map.getSize()){
-    qWarning() << "Free space" << storage.bytesAvailable() << "bytes is less than map size ("<<map.getSize()<<")!";
-  }
-#endif
-  
   auto job=new MapDownloadJob(&webCtrl, map, dir, replaceExisting);
-  connect(job, SIGNAL(finished()), this, SLOT(onJobFinished()));
-  connect(job, SIGNAL(failed(QString)), this, SLOT(onJobFailed(QString)));
+  connect(job, &MapDownloadJob::finished, this, &MapManager::onJobFinished);
+  connect(job, &MapDownloadJob::canceled, this, &MapManager::onJobFinished);
+  connect(job, &MapDownloadJob::failed, this, &MapManager::onJobFailed);
   downloadJobs<<job;
   emit downloadJobsChanged();
   downloadNext();
@@ -357,9 +387,10 @@ void MapManager::downloadNext()
   }  
 }
 
-void MapManager::onJobFailed(QString /*errorMessage*/)
+void MapManager::onJobFailed(QString errorMessage)
 {
   onJobFinished();
+  emit mapDownloadFails(errorMessage);
 }
 
 void MapManager::onJobFinished()
@@ -367,17 +398,17 @@ void MapManager::onJobFinished()
   QList<MapDownloadJob*> finished;
   for (auto job:downloadJobs){
     if (job->isDone()){
-      finished<<job;
+      finished << job;
 
-      if (job->isReplaceExisting()){
+      if (job->isReplaceExisting() && job->isSuccessful()){
         // if there is upgrade requested, delete old database with same (logical) path
         for (auto &mapDir:databaseDirectories) {
           if (mapDir.hasMetadata() &&
               mapDir.getPath() == job->getMapPath() &&
               mapDir.getDir().canonicalPath() != job->getDestinationDirectory().canonicalPath()) {
 
-            osmscout::log.Debug() << "deleting map database" << mapDir.getName().toStdString() << "after upgrade:"
-                     << mapDir.getDir().canonicalPath().toStdString();
+            osmscout::log.Debug() << "deleting map database " << mapDir.getName().toStdString() << " after upgrade: "
+                                  << mapDir.getDir().canonicalPath().toStdString();
             mapDir.deleteDatabase();
           }
         }
@@ -390,7 +421,7 @@ void MapManager::onJobFinished()
   for (auto job:finished){
     downloadJobs.removeOne(job);
     emit downloadJobsChanged();
-    delete job;
+    job->deleteLater();
   }
   downloadNext();
 }

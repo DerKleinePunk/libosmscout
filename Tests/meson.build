@@ -110,17 +110,19 @@ Geometry = executable('Geometry',
              link_with: [osmscout],
              install: false)
 
-LocationServiceTest = executable('LocationServiceTest',
-             [
-               'src/LocationServiceTest.cpp',
-               'src/SearchForLocationByStringTest.cpp',
-               'src/SearchForLocationByFormTest.cpp',
-               'src/SearchForPOIByFormTest.cpp'
-             ],
-             include_directories: [testIncDir, osmscouttestIncDir, osmscoutimportIncDir, osmscoutIncDir],
-             dependencies: [mathDep, openmpDep],
-             link_with: [osmscouttest, osmscoutimport, osmscout],
-             install: false)
+if buildImport
+    LocationServiceTest = executable('LocationServiceTest',
+                 [
+                   'src/LocationServiceTest.cpp',
+                   'src/SearchForLocationByStringTest.cpp',
+                   'src/SearchForLocationByFormTest.cpp',
+                   'src/SearchForPOIByFormTest.cpp'
+                 ],
+                 include_directories: [testIncDir, osmscouttestIncDir, osmscoutimportIncDir, osmscoutIncDir],
+                 dependencies: [mathDep, openmpDep],
+                 link_with: [osmscouttest, osmscoutimport, osmscout],
+                 install: false)
+endif
 
 MapRotate = executable('MapRotate',
              'src/MapRotate.cpp',
@@ -167,6 +169,13 @@ ReaderScannerPerformance = executable('ReaderScannerPerformance',
 
 ScanConversion = executable('ScanConversion',
              'src/ScanConversion.cpp',
+             include_directories: [testIncDir, osmscoutIncDir],
+             dependencies: [mathDep, openmpDep],
+             link_with: [osmscout],
+             install: false)
+
+StringUtils = executable('StringUtils',
+             'src/StringUtils.cpp',
              include_directories: [testIncDir, osmscoutIncDir],
              dependencies: [mathDep, openmpDep],
              link_with: [osmscout],
@@ -243,16 +252,20 @@ test('Check File access implementation', FileScannerWriter)
 test('Check parsing of geo box intersection', GeoBox)
 test('Check parsing of geo coordinates', GeoCoordParse)
 test('Check impl. of geometric functions', Geometry)
-test('Check LocationService', LocationServiceTest, env: ostandossEnv)
 test('Check rotation of maps', MapRotate)
 test('Check correctness of NumberSet class', NumberSet)
 test('Check scan conversion code', ScanConversion)
+test('Check string utils', StringUtils)
 test('Check tiling calculation code', TilingTest)
 test('Check polygon transformation code', TransPolygon)
 test('Check implementation of work queue', WorkQueue)
 test('Check WString<=>String conversion code', WStringStringConversion)
 test('Check LabelPath code', LabelPathTest)
 test('Check Base64 code', Base64Test)
+
+if buildImport
+    test('Check LocationService', LocationServiceTest, env: ostandossEnv)
+endif
 
 stylesheets = [
             'standard.oss',
@@ -270,3 +283,16 @@ foreach stylesheet : stylesheets
                     meson.current_source_dir() + '/../stylesheets/map.ost',
                     meson.current_source_dir() + '/../stylesheets/' + stylesheet])
 endforeach
+
+if buildClientQt
+  drawtextMocs = qt5.preprocess(moc_headers : ['include/ClientQtThreading.h'])
+
+  ClientQtThreading = executable('ClientQtThreading',
+               'src/ClientQtThreading.cpp',
+               drawtextMocs,
+               include_directories: [testIncDir, osmscoutmapqtIncDir, osmscoutmapIncDir, osmscoutIncDir, osmscoutclientqtIncDir],
+               dependencies: [mathDep, threadDep, openmpDep, qt5GuiDep, qt5WidgetsDep, qt5QmlDep, qt5QuickDep, qt5NetworkDep],
+               link_with: [osmscoutmapqt, osmscoutmap, osmscout, osmscoutclientqt],
+               install: false)
+endif
+

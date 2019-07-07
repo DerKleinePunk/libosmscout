@@ -37,6 +37,8 @@
 
 #include <osmscout/GroundTile.h>
 
+#include <osmscout/MapData.h>
+
 #include <osmscout/util/Breaker.h>
 #include <osmscout/util/Geometry.h>
 #include <osmscout/util/Projection.h>
@@ -56,42 +58,21 @@ namespace osmscout {
     DumpStatistics        =  1, //!< Prints details for debugging, if debug flag (performance, data) is set in renderer parameter
     PreprocessData        =  2, //!< Convert geographical coordinates of object points to screen coordinates,
     Prerender             =  3, //!< Implementation specific preparison
-    DrawGroundTiles       =  4, //!< Draw unknown/sea/land tiles and tiles with "coastlines"
-    DrawOSMTileGrids      =  5, //!< If special style exists, renders grid corresponding to OSM tiles
-    DrawAreas             =  6,
-    DrawWays              =  7,
-    DrawWayDecorations    =  8,
-    DrawWayContourLabels  =  9,
-    PrepareAreaLabels     = 10,
-    DrawAreaBorderLabels  = 11,
-    DrawAreaBorderSymbols = 12,
-    PrepareNodeLabels     = 13,
-    DrawLabels            = 14,
-    Postrender            = 15, //!< Implementation specific final step
-    LastStep              = 15
+    DrawBaseMapTiles      =  4, //!< Draw unknown/sea/land tiles and tiles with "coastlines" from base map
+    DrawGroundTiles       =  5, //!< Same as previous, but from main database
+    DrawOSMTileGrids      =  6, //!< If special style exists, renders grid corresponding to OSM tiles
+    DrawAreas             =  7,
+    DrawWays              =  8,
+    DrawWayDecorations    =  9,
+    DrawWayContourLabels  = 10,
+    PrepareAreaLabels     = 11,
+    DrawAreaBorderLabels  = 12,
+    DrawAreaBorderSymbols = 13,
+    PrepareNodeLabels     = 14,
+    DrawLabels            = 15,
+    Postrender            = 16, //!< Implementation specific final step
+    LastStep              = 16
   };
-
-  /**
-   * \ingroup Renderer
-   *
-   * This is the data structure holding all to be rendered data.
-   */
-  class OSMSCOUT_MAP_API MapData CLASS_FINAL
-  {
-  public:
-    std::vector<NodeRef>  nodes;       //!< Nodes as retrieved from database
-    std::vector<AreaRef>  areas;       //!< Areas as retrieved from database
-    std::vector<WayRef>   ways;        //!< Ways as retrieved from database
-    std::list<NodeRef>    poiNodes;    //!< List of manually added nodes (not managed or changed by the database)
-    std::list<AreaRef>    poiAreas;    //!< List of manually added areas (not managed or changed by the database)
-    std::list<WayRef>     poiWays;     //!< List of manually added ways (not managed or changed by the database)
-    std::list<GroundTile> groundTiles; //!< List of ground tiles (optional)
-
-  public:
-    void ClearDBData();
-  };
-
-  typedef std::shared_ptr<MapData> MapDataRef;
 
   /**
    * Abstract base class of all renders (though you can always write
@@ -218,55 +199,18 @@ namespace osmscout {
       std::list<PolyData>      clippings;       //!< Clipping polygons to be used during drawing of this area
     };
 
-    /**
-     * Helper class for drawing contours. Allows the MapPainter base class
-     * to inject itself at certain points in the contour label rendering code of
-     * the actual backend.
-     */
-    class OSMSCOUT_MAP_API ContourLabelHelper CLASS_FINAL
-    {
-    private:
-      double contourLabelOffset;
-      double contourLabelSpace;
-      double pathLength;
-      double textWidth;
-      double currentOffset;
-
-    public:
-      explicit ContourLabelHelper(const MapPainter& painter);
-
-      bool Init(double pathLength,
-                double textWidth);
-
-      inline bool ContinueDrawing() const
-      {
-        return currentOffset<pathLength;
-      }
-
-      inline double GetCurrentOffset() const
-      {
-        return currentOffset;
-      }
-
-      inline void AdvancePartial(double width)
-      {
-        currentOffset+=width;
-      }
-
-      inline void AdvanceText()
-      {
-        currentOffset+=textWidth;
-      }
-
-      inline void AdvanceSpace()
-      {
-        currentOffset+=contourLabelSpace;
-      }
-    };
-
   protected:
     CoordBuffer                  *coordBuffer;      //!< Reference to the coordinate buffer
     TextStyleRef                 debugLabel;
+
+    /**
+      Fallback styles in case they are missing for the style sheet
+      */
+    //@{
+    FillStyleRef                 landFill;
+    FillStyleRef                 seaFill;
+    FeatureValueBuffer           coastlineSegmentAttributes;
+    //@}
 
   private:
     std::vector<StepMethod>      stepMethods;
@@ -278,15 +222,6 @@ namespace osmscout {
 
     std::vector<TextStyleRef>    textStyles;     //!< Temporary storage for StyleConfig return value
     std::vector<LineStyleRef>    lineStyles;     //!< Temporary storage for StyleConfig return value
-
-    /**
-      Fallback styles in case they are missing for the style sheet
-      */
-    //@{
-    FillStyleRef                 landFill;
-    FillStyleRef                 seaFill;
-    FeatureValueBuffer           coastlineSegmentAttributes;
-    //@}
 
     /**                           L
      Precalculations
@@ -427,6 +362,11 @@ namespace osmscout {
                          const MapParameter& parameter,
                          const Magnification& magnification,
                          const LineStyleRef& osmTileLine);
+
+    void DrawGroundTiles(const Projection& projection,
+                         const MapParameter& parameter,
+                         const std::list<GroundTile> &groundTiles);
+
     //@}
 
     /**
@@ -448,6 +388,10 @@ namespace osmscout {
     void Prerender(const Projection& projection,
                    const MapParameter& parameter,
                    const MapData& data);
+
+    void DrawBaseMapTiles(const Projection& projection,
+                          const MapParameter& parameter,
+                          const MapData& data);
 
     void DrawGroundTiles(const Projection& projection,
                          const MapParameter& parameter,
@@ -730,7 +674,7 @@ namespace osmscout {
     }
 
   public:
-    MapPainterBatch(size_t expectedCount)
+    explicit MapPainterBatch(size_t expectedCount)
     {
       data.reserve(expectedCount);
       painters.reserve(expectedCount);
